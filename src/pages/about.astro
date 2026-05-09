@@ -1,0 +1,141 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout
+  title="About"
+  description="Open Russian grammatical error correction research at synterr-nlp."
+>
+  <h1>About</h1>
+
+  <section style="margin: 1.5rem 0 3rem;">
+    <p style="font-size: 1.1rem; line-height: 1.6;">
+      synterr-nlp is an open research effort on Russian grammatical error
+      correction. We build tools and benchmarks that make it possible to
+      evaluate language models honestly: rule by rule, against the
+      prescriptive grammar that defines the rules, with reproducible
+      pipelines and full data provenance.
+    </p>
+  </section>
+
+  <section style="margin: 3rem 0;">
+    <h2>What we work on</h2>
+    <p>
+      Existing GEC benchmarks for Russian summarize heterogeneous behavior
+      into one F-score and miss the parts where models silently regress.
+      Our research program addresses this in three ways:
+    </p>
+    <ol style="margin: 1rem 0 0; padding-left: 1.5rem; line-height: 1.65;">
+      <li>
+        <strong>A rule-grounded taxonomy.</strong> 98 fine-grained error tags
+        anchored in Rozental's reference grammar, mapped against existing
+        Russian GEC corpora to surface what they cover and what they don't.
+      </li>
+      <li>
+        <strong>Synterr, a synthetic-error generator.</strong> Configurable
+        per-rule rates, dependency-tree-driven handlers (agreement,
+        government, punctuation), with morpheme-level corruption that
+        respects Russian morphology.
+      </li>
+      <li>
+        <strong>Per-rule diagnostics.</strong> Browsable tables and
+        evaluation harnesses that surface rule-level model behavior aggregate
+        metrics hide.
+      </li>
+    </ol>
+  </section>
+
+  <section style="margin: 3rem 0;">
+    <h2>Team</h2>
+    <ul class="team-list">
+      <li>
+        <span class="member-name">Anna Smirnova</span>
+        <span class="member-aff">HEC Lausanne, University of Lausanne</span>
+        <span class="member-link"><a href="mailto:anna.smirnova@unil.ch">anna.smirnova@unil.ch</a></span>
+      </li>
+      <li>
+        <span class="member-name">Artyom Kopan</span>
+        <span class="member-aff">Saint Petersburg State University</span>
+        <span class="member-link"><a href="mailto:artyom.kopan@gmail.com">artyom.kopan@gmail.com</a></span>
+      </li>
+      <li>
+        <span class="member-name">Vladislav Makeev</span>
+        <span class="member-aff">Saint Petersburg State University</span>
+        <span class="member-link"><a href="mailto:makeev.vladislav.d@gmail.com">makeev.vladislav.d@gmail.com</a></span>
+      </li>
+      <li>
+        <span class="member-name">George Chernishev</span>
+        <span class="member-aff">Saint Petersburg State University</span>
+        <span class="member-link"><a href="mailto:chernishev@gmail.com">chernishev@gmail.com</a></span>
+      </li>
+    </ul>
+  </section>
+
+  <section style="margin: 3rem 0;">
+    <h2>Acknowledgments</h2>
+    <p>
+      Compute provided on the DGX Spark hosted by Simon Scheidegger at HEC Lausanne.
+      The site, the synterr code, and several paper figures use Claude assistance.
+    </p>
+  </section>
+
+  <section style="margin: 3rem 0;">
+    <h2>Get in touch</h2>
+    <p>
+      Bugs and feature requests:
+      <a href="https://github.com/synterr-nlp/synterr/issues" rel="external">GitHub Issues</a>.
+      Contributions: see <a href="/synterr/contributing/">the contributing guide</a>.
+      Press, collaborations, anything else: email
+      <a href="mailto:anna.smirnova@unil.ch">Anna</a>.
+    </p>
+  </section>
+</BaseLayout>
+
+<style>
+  h2 {
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--ink);
+    font-size: 1.2rem;
+    margin-bottom: 0.75rem;
+  }
+  p { line-height: 1.6; }
+
+  .team-list {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0 0;
+    border-top: 1px solid var(--rule);
+  }
+  .team-list li {
+    display: grid;
+    grid-template-columns: 12rem 1fr 14rem;
+    gap: 1rem;
+    align-items: baseline;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--rule);
+    font-size: 0.95rem;
+  }
+  .member-name {
+    font-family: var(--font-sans);
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .member-aff {
+    color: var(--ink-soft);
+    font-size: 0.92rem;
+  }
+  .member-link {
+    text-align: right;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+  }
+
+  @media (max-width: 700px) {
+    .team-list li {
+      grid-template-columns: 1fr;
+      gap: 0.2rem;
+    }
+    .member-link { text-align: left; }
+  }
+</style>

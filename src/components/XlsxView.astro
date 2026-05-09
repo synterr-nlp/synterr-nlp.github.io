@@ -1,0 +1,457 @@
+---
+/**
+ * Native xlsx viewer — fetches the .xlsx file, parses with ExcelJS in the
+ * browser, and renders cells with original fills / fonts / borders / merges.
+ *
+ * Handles ARGB cell colors directly. Theme colors fall back to no fill
+ * (workbook theme parsing is nontrivial; our xlsx files use ARGB).
+ *
+ * Usage:
+ *   <XlsxView src="/papers/bea-2026/evidence_table.xlsx" sheet="LORUGEC" />
+ */
+interface Props {
+  src: string;
+  sheet?: string;       // sheet name; if omitted, first sheet
+  caption?: string;
+  download?: string;    // separate download URL; defaults to src
+}
+
+const { src, sheet, caption, download } = Astro.props;
+const id = `xv-${Math.random().toString(36).slice(2, 9)}`;
+---
+
+<figure class="xv-wrap">
+  {caption && <figcaption class="xv-caption">{caption}</figcaption>}
+
+  <div class="xv-toolbar">
+    <input type="text" class="xv-filter" data-target={id} placeholder="filter rows…" />
+    <span class="xv-counts" data-target={id}>
+      <span class="xv-shown">0</span> / <span class="xv-total">0</span> rows
+    </span>
+    <a class="xv-download" href={download ?? src} download>download xlsx</a>
+  </div>
+
+  <div id={id} class="xv-scroll" data-src={src} data-sheet={sheet ?? ""}>
+    <p class="xv-loading">parsing xlsx…</p>
+  </div>
+</figure>
+
+<script is:inline src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+
+<script is:inline define:vars={{ id }}>
+  (function () {
+    const root = document.getElementById(id);
+    if (!root) return;
+    const src = root.dataset.src;
+    const wantSheet = root.dataset.sheet;
+    const filterEl = document.querySelector(`.xv-filter[data-target="${id}"]`);
+    const countsEl = document.querySelector(`.xv-counts[data-target="${id}"]`);
+
+    function attachColumnResize(table) {
+      if (!table) return;
+      let colgroup = table.querySelector("colgroup");
+      const headerRow = table.querySelector("thead tr") || table.querySelector("tr");
+      if (!headerRow) return;
+      const ths = Array.from(headerRow.children);
+      if (!colgroup) {
+        colgroup = document.createElement("colgroup");
+        for (let i = 0; i < ths.length; i++) colgroup.appendChild(document.createElement("col"));
+        table.insertBefore(colgroup, table.firstChild);
+      } else {
+        while (colgroup.children.length < ths.length) colgroup.appendChild(document.createElement("col"));
+      }
+      const cols = Array.from(colgroup.children);
+
+      // Defer switching to fixed layout until first drag, so the table can
+      // still grow naturally to fit content beforehand.
+      let layoutLocked = false;
+      function lockLayout() {
+        if (layoutLocked) return;
+        const widths = ths.map((t) => t.getBoundingClientRect().width);
+        widths.forEach((w, i) => {
+          if (w > 0) cols[i].style.width = `${Math.round(w)}px`;
+        });
+        table.style.tableLayout = "fixed";
+        layoutLocked = true;
+      }
+
+      ths.forEach((th, i) => {
+        if (th.querySelector(".col-resize-handle")) return;
+        // Don't override position: th may be sticky (XlsxView) or static — we
+        // make the handle position: absolute and let the nearest positioned
+        // ancestor (sticky th or the table) be the containing block.
+        const handle = document.createElement("span");
+        handle.className = "col-resize-handle";
+        handle.setAttribute("role", "separator");
+        handle.setAttribute("aria-label", "Resize column");
+        th.appendChild(handle);
+
+        let startX = 0, startW = 0;
+        function onMove(e) {
+          const dx = e.clientX - startX;
+          cols[i].style.width = `${Math.max(40, startW + dx)}px`;
+        }
+        function onUp() {
+          document.removeEventListener("mousemove", onMove);
+          document.removeEventListener("mouseup", onUp);
+          document.body.style.cursor = "";
+          document.body.style.userSelect = "";
+        }
+        handle.addEventListener("mousedown", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          lockLayout();
+          startX = e.clientX;
+          startW = cols[i].getBoundingClientRect().width || th.getBoundingClientRect().width;
+          document.addEventListener("mousemove", onMove);
+          document.addEventListener("mouseup", onUp);
+          document.body.style.cursor = "col-resize";
+          document.body.style.userSelect = "none";
+        });
+        handle.addEventListener("dblclick", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          cols[i].style.width = "";
+        });
+      });
+    }
+
+    function escapeHTML(s) {
+      return String(s ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\n/g, "<br>");
+    }
+
+    // ---- Color resolution ------------------------------------------------
+
+    /** Convert ExcelJS color object → CSS hex, or null if we can't resolve. */
+    function colorToCSS(color) {
+      if (!color) return null;
+      if (typeof color.argb === "string" && /^[0-9A-Fa-f]{8}$/.test(color.argb)) {
+        const a = parseInt(color.argb.slice(0, 2), 16);
+        const rgb = color.argb.slice(2).toUpperCase();
+        // Filter out the openpyxl/Excel "default" 00000000 placeholder.
+        if (rgb === "000000" && a === 0) return null;
+        return `#${rgb}`;
+      }
+      // Theme + indexed colors: skip cleanly.
+      return null;
+    }
+
+    function fillToCSS(fill) {
+      if (!fill) return null;
+      if (fill.type === "pattern" && fill.pattern && fill.pattern !== "none") {
+        // fgColor is what shows for solid fills
+        const fg = colorToCSS(fill.fgColor);
+        if (fg) return fg;
+      }
+      return null;
+    }
+
+    function borderSide(side) {
+      if (!side || !side.style) return null;
+      const c = colorToCSS(side.color) || "#cbcbcb";
+      const widthMap = {
+        thin: "1px", hair: "0.5px", dotted: "1px", dashed: "1px",
+        medium: "1.5px", thick: "2px", double: "3px",
+        mediumDashed: "1.5px", dashDot: "1px", mediumDashDot: "1.5px",
+        dashDotDot: "1px", mediumDashDotDot: "1.5px", slantDashDot: "1px",
+      };
+      const styleMap = {
+        thin: "solid", medium: "solid", thick: "solid", hair: "solid",
+        dotted: "dotted", dashed: "dashed", double: "double",
+        dashDot: "dashed", mediumDashed: "dashed", mediumDashDot: "dashed",
+        dashDotDot: "dashed", mediumDashDotDot: "dashed", slantDashDot: "dashed",
+      };
+      return `${widthMap[side.style] || "1px"} ${styleMap[side.style] || "solid"} ${c}`;
+    }
+
+    function bordersToCSS(border) {
+      if (!border) return [];
+      const out = [];
+      const t = borderSide(border.top); if (t) out.push(`border-top:${t}`);
+      const r = borderSide(border.right); if (r) out.push(`border-right:${r}`);
+      const b = borderSide(border.bottom); if (b) out.push(`border-bottom:${b}`);
+      const l = borderSide(border.left); if (l) out.push(`border-left:${l}`);
+      return out;
+    }
+
+    // ---- Cell rendering --------------------------------------------------
+
+    function cellInlineStyle(cell) {
+      const parts = [];
+      const fill = fillToCSS(cell.fill);
+      if (fill) parts.push(`background:${fill}`);
+      if (cell.font) {
+        const fc = colorToCSS(cell.font.color);
+        if (fc) parts.push(`color:${fc}`);
+        if (cell.font.bold) parts.push("font-weight:600");
+        if (cell.font.italic) parts.push("font-style:italic");
+        if (cell.font.size) parts.push(`font-size:${cell.font.size * 1.0}pt`);
+        if (cell.font.name) parts.push(`font-family:"${cell.font.name}",-apple-system,sans-serif`);
+      }
+      if (cell.alignment) {
+        const h = cell.alignment.horizontal;
+        if (h === "center" || h === "right") parts.push(`text-align:${h}`);
+        const v = cell.alignment.vertical;
+        if (v === "top") parts.push("vertical-align:top");
+        else if (v === "bottom") parts.push("vertical-align:bottom");
+        if (cell.alignment.wrapText) parts.push("white-space:normal");
+      }
+      parts.push(...bordersToCSS(cell.border));
+      return parts.join(";");
+    }
+
+    function cellText(cell) {
+      // Use ExcelJS's formatted text when available (handles numFmt, dates, etc.)
+      const t = cell.text;
+      if (t !== undefined && t !== null && t !== "") return t;
+      const v = cell.value;
+      if (v === null || v === undefined) return "";
+      if (typeof v === "object") {
+        if (v.text) return v.text;
+        if (v.richText) return v.richText.map((rt) => rt.text).join("");
+        if (v.result !== undefined) return String(v.result);
+        if (v.error) return String(v.error);
+      }
+      return String(v);
+    }
+
+    // ---- Main parse + render ---------------------------------------------
+
+    fetch(src)
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.arrayBuffer();
+      })
+      .then((buf) => {
+        const wb = new ExcelJS.Workbook();
+        return wb.xlsx.load(buf).then(() => wb);
+      })
+      .then((wb) => {
+        const ws = wantSheet ? wb.getWorksheet(wantSheet) : wb.worksheets[0];
+        if (!ws) throw new Error(`sheet not found: ${wantSheet || "(first)"}`);
+
+        // Build merge map: covered cells skip rendering; origin cells get rowspan/colspan.
+        const covered = new Set();
+        const spans = new Map();
+        for (const m of ws.model.merges || []) {
+          // m is a range string like "A1:B3"
+          const match = /^([A-Z]+)(\d+):([A-Z]+)(\d+)$/.exec(m);
+          if (!match) continue;
+          const [, c1, r1, c2, r2] = match;
+          const colNum = (s) => s.split("").reduce((acc, ch) => acc * 26 + (ch.charCodeAt(0) - 64), 0);
+          const minC = colNum(c1), maxC = colNum(c2);
+          const minR = parseInt(r1, 10), maxR = parseInt(r2, 10);
+          spans.set(`${minR},${minC}`, [maxR - minR + 1, maxC - minC + 1]);
+          for (let r = minR; r <= maxR; r++) {
+            for (let c = minC; c <= maxC; c++) {
+              if (r !== minR || c !== minC) covered.add(`${r},${c}`);
+            }
+          }
+        }
+
+        // Column widths
+        const colCount = ws.columnCount;
+        const colWidths = [];
+        for (let i = 1; i <= colCount; i++) {
+          const col = ws.getColumn(i);
+          if (col && col.width) {
+            // xlsx units → ~7px per unit (Excel default font)
+            colWidths.push(Math.round(col.width * 7));
+          } else {
+            colWidths.push(null);
+          }
+        }
+
+        // Render. Detect header row(s) by checking if all cells in row 1 are bold + filled.
+        const firstRow = ws.getRow(1);
+        let headerRows = 1;
+        let allBold = true, anyFilled = false;
+        firstRow.eachCell({ includeEmpty: false }, (c) => {
+          if (!(c.font && c.font.bold)) allBold = false;
+          if (fillToCSS(c.fill)) anyFilled = true;
+        });
+        if (!allBold && !anyFilled) headerRows = 0;
+
+        const out = ['<table class="xv-table">'];
+        if (colWidths.some((w) => w !== null)) {
+          out.push("<colgroup>");
+          for (const w of colWidths) {
+            out.push(w ? `<col style="min-width:${w}px">` : "<col>");
+          }
+          out.push("</colgroup>");
+        }
+
+        const rowCount = ws.rowCount;
+        for (let r = 1; r <= rowCount; r++) {
+          const isHeader = r <= headerRows;
+          if (isHeader && r === 1) out.push("<thead>");
+          if (!isHeader && r === headerRows + 1) out.push("<tbody>");
+
+          out.push("<tr>");
+          const row = ws.getRow(r);
+          for (let c = 1; c <= colCount; c++) {
+            const key = `${r},${c}`;
+            if (covered.has(key)) continue;
+            const cell = row.getCell(c);
+            const text = cellText(cell);
+            const style = cellInlineStyle(cell);
+            const span = spans.get(key);
+            const attrs = [];
+            if (span) {
+              if (span[0] > 1) attrs.push(`rowspan="${span[0]}"`);
+              if (span[1] > 1) attrs.push(`colspan="${span[1]}"`);
+            }
+            if (style) attrs.push(`style="${style}"`);
+            const tag = isHeader ? "th" : "td";
+            const attrStr = attrs.length ? " " + attrs.join(" ") : "";
+            out.push(`<${tag}${attrStr}>${escapeHTML(text)}</${tag}>`);
+          }
+          out.push("</tr>");
+          if (isHeader && r === headerRows) out.push("</thead>");
+        }
+        if (rowCount > headerRows) out.push("</tbody>");
+        out.push("</table>");
+        root.innerHTML = out.join("");
+
+        attachColumnResize(root.querySelector("table"));
+
+        const tbodyRows = root.querySelectorAll("tbody tr");
+        const total = tbodyRows.length;
+        countsEl.querySelector(".xv-total").textContent = total;
+        countsEl.querySelector(".xv-shown").textContent = total;
+
+        let timer;
+        filterEl.addEventListener("input", () => {
+          clearTimeout(timer);
+          timer = setTimeout(() => {
+            const q = filterEl.value.toLowerCase().trim();
+            let shown = 0;
+            tbodyRows.forEach((tr) => {
+              if (!q || tr.textContent.toLowerCase().includes(q)) {
+                tr.style.display = "";
+                shown++;
+              } else {
+                tr.style.display = "none";
+              }
+            });
+            countsEl.querySelector(".xv-shown").textContent = shown;
+          }, 120);
+        });
+      })
+      .catch((err) => {
+        root.innerHTML = `<p class="xv-error">Failed to render ${src}<br><small>${err.message}</small></p>`;
+        console.error(err);
+      });
+  })();
+</script>
+
+<style is:inline>
+  .xv-wrap { margin: 2rem 0; }
+  .xv-caption {
+    font-family: var(--font-sans);
+    font-size: 0.88rem;
+    color: var(--muted);
+    margin: 0 0 0.5rem;
+  }
+  .xv-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+    font-family: var(--font-sans);
+    font-size: 0.88rem;
+  }
+  .xv-filter {
+    flex: 1;
+    max-width: 28rem;
+    padding: 0.45rem 0.7rem;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 0.9rem;
+    font-family: var(--font-sans);
+  }
+  .xv-filter:focus { outline: none; border-color: var(--accent); }
+  .xv-counts {
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    white-space: nowrap;
+  }
+  .xv-download {
+    color: var(--ink-soft);
+    border-bottom: none;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+  }
+  .xv-download:hover { color: var(--accent); }
+
+  .xv-scroll {
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    overflow: auto;
+    max-height: 80vh;
+    background: white;
+  }
+  .xv-loading, .xv-error {
+    padding: 1.25rem;
+    color: var(--muted);
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+  }
+  .xv-error { color: var(--accent); }
+
+  /* The xlsx-styled table. White scaffold (xlsx fills are designed for white).
+     Inline cell styles do the visual work. */
+  .xv-scroll .xv-table {
+    border-collapse: collapse;
+    font-family: -apple-system, "Calibri", "Helvetica Neue", sans-serif;
+    font-size: 0.85rem;
+    color: #1f1f1f;
+    background: white;
+  }
+  .xv-scroll .xv-table th,
+  .xv-scroll .xv-table td {
+    padding: 0.35rem 0.6rem;
+    line-height: 1.35;
+    vertical-align: middle;
+    white-space: nowrap;
+    /* Cells without explicit borders get a light scaffold so the table is readable. */
+    border: 1px solid #e6e6e6;
+  }
+  .xv-scroll .xv-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .xv-scroll {
+      box-shadow: inset 0 0 0 1px var(--rule);
+    }
+  }
+
+  /* Column resize handle: thin strip on right edge of every <th>. */
+  .col-resize-handle {
+    position: absolute;
+    top: 0;
+    right: -3px;
+    width: 6px;
+    height: 100%;
+    cursor: col-resize;
+    z-index: 2;
+    user-select: none;
+    background: transparent;
+    transition: background 0.1s;
+  }
+  .col-resize-handle:hover,
+  .col-resize-handle:active {
+    background: var(--accent);
+    opacity: 0.5;
+  }
+</style>

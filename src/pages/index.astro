@@ -1,0 +1,316 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout
+  title="synterr-nlp"
+  description="Open Russian grammatical error correction. Rule-grounded synthetic data, per-rule diagnostics, reproducible pipelines."
+  wide={true}
+>
+  <!-- Hero ------------------------------------------------------------ -->
+  <section class="hero">
+    <div class="hero-text">
+      <h1>Russian grammatical error correction, evaluated honestly.</h1>
+      <p class="lede">
+        Most GEC benchmarks summarize heterogeneous behavior into one F-score
+        and miss the parts where models silently regress. We build the
+        rule-grounded synthetic data and per-rule diagnostics that surface
+        what aggregate metrics hide.
+      </p>
+      <div class="hero-cta">
+        <a class="btn-primary" href="/papers/bea-2026/overview/">Read the BEA 2026 overview</a>
+        <a class="btn-secondary" href="https://github.com/synterr-nlp/synterr" rel="external">Code on GitHub</a>
+      </div>
+    </div>
+    <figure class="hero-fig">
+      <img src="/papers/bea-2026/figures/depparse_errors.svg"
+           alt="A Russian sentence with three rule-grounded error sites annotated on its dependency tree." />
+      <figcaption>
+        Three rule-grounded error sites on one sentence: agreement
+        (<code>amod</code>), subordinate-clause boundary (<code>acl:relcl</code>),
+        case government (<code>obl</code>).
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- Featured paper -------------------------------------------------- -->
+  <section class="featured">
+    <div class="kicker">Featured · accepted at ACL BEA 2026</div>
+    <h2 class="featured-title">What Aggregate Scores Hide</h2>
+    <p class="featured-blurb">
+      Across eight open models from 0.8B to 12B parameters, fine-tuning on
+      synthetic data raises overall F<sub>0.5</sub> on LoRuGEC, but drives
+      subordinate-clause comma accuracy from 14% to 1%. Aggregate scores
+      can't detect this; per-rule diagnostics can. Once detected, it's
+      fixable.
+    </p>
+    <ul class="featured-links">
+      <li><a href="/papers/bea-2026/overview/">Graphical overview</a></li>
+      <li><a href="/papers/bea-2026/">Paper landing</a></li>
+      <li><a href="/papers/bea-2026/tables/per-rule/">Per-rule data</a></li>
+      <li><a href="/papers/bea-2026/tables/reasoning-9b/">Reasoning chains</a></li>
+    </ul>
+  </section>
+
+  <!-- What we do ------------------------------------------------------ -->
+  <section class="threecol">
+    <article>
+      <h3>Synterr</h3>
+      <p>
+        An open-source synthetic-error generator for Russian.
+        Configurable per-rule rates, dependency-tree-grounded handlers,
+        a 98-category taxonomy from Rozental's reference grammar.
+      </p>
+      <p class="link">
+        <a href="/synterr/">Read the docs</a>
+        &nbsp;·&nbsp;
+        <a href="https://github.com/synterr-nlp/synterr" rel="external">GitHub</a>
+      </p>
+    </article>
+    <article>
+      <h3>Per-rule diagnostics</h3>
+      <p>
+        Browsable taxonomy and per-rule scores for evaluating Russian GEC
+        systems honestly. Cell-coloured xlsx parsed natively in your
+        browser. Sortable, filterable, downloadable.
+      </p>
+      <p class="link">
+        <a href="/papers/bea-2026/tables/cross-reference/">Browse the taxonomy</a>
+      </p>
+    </article>
+    <article>
+      <h3>Reproducible pipelines</h3>
+      <p>
+        Every released dataset comes with pinned generation commit, SHA-256
+        checksums, and a verifier script. v4 SFT data is byte-verified
+        against the file the paper trained on.
+      </p>
+      <p class="link">
+        <a href="https://github.com/synterr-nlp/synterr/blob/master/data/V4_DATA_PROVENANCE.md" rel="external">v4 provenance</a>
+      </p>
+    </article>
+  </section>
+
+  <!-- Latest activity ------------------------------------------------- -->
+  <section class="activity">
+    <h2>Recent</h2>
+    <ul class="timeline">
+      <li>
+        <time datetime="2026-05-09">2026-05-09</time>
+        <span><strong>Site online.</strong> Browsable tables, reasoning-chain viewer, graphical overview.</span>
+      </li>
+      <li>
+        <time datetime="2026-05-01">2026-05-01</time>
+        <span><strong>Synterr v1.0.</strong> Paper-release tag with reproducibility pack (checksums, verify script, pinned commit).</span>
+      </li>
+      <li>
+        <time datetime="2026-05-04">2026-05-04</time>
+        <span><strong>BEA 2026 acceptance.</strong> "What Aggregate Scores Hide" accepted at the 21st BEA workshop.</span>
+      </li>
+      <li>
+        <time datetime="2026-03-22">2026-03-22</time>
+        <span><strong>v4 dataset frozen.</strong> 39,209 SFT examples, deterministic build pipeline.</span>
+      </li>
+    </ul>
+  </section>
+</BaseLayout>
+
+<style>
+  /* ── Hero ─────────────────────────────────────────────── */
+  .hero {
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    gap: 3rem;
+    align-items: center;
+    margin: 1.5rem 0 4rem;
+  }
+  .hero h1 {
+    font-size: 2.4rem;
+    line-height: 1.1;
+    margin: 0 0 1rem;
+    letter-spacing: -0.015em;
+  }
+  .hero .lede {
+    font-size: 1.1rem;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    margin: 0 0 1.75rem;
+  }
+  .hero-cta {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+  .btn-primary, .btn-secondary {
+    display: inline-block;
+    padding: 0.55rem 1rem;
+    font-family: var(--font-sans);
+    font-size: 0.92rem;
+    border-radius: 4px;
+    text-decoration: none;
+    border-bottom: none;
+    line-height: 1.3;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+  }
+  .btn-primary:hover {
+    background: var(--ink);
+    color: white;
+  }
+  .btn-secondary {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--rule);
+  }
+  .btn-secondary:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .hero-fig {
+    margin: 0;
+  }
+  .hero-fig img {
+    width: 100%;
+    height: auto;
+    background: white;
+    padding: 1rem;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+  }
+  .hero-fig figcaption {
+    margin-top: 0.6rem;
+    font-family: var(--font-sans);
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .hero-fig code {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    background: var(--bg-soft);
+    padding: 0 0.25rem;
+    border-radius: 2px;
+  }
+
+  /* ── Featured ─────────────────────────────────────────── */
+  .featured {
+    margin: 4rem 0;
+    padding: 2rem 2.25rem;
+    background: var(--bg-soft);
+    border-radius: 6px;
+    border-left: 3px solid var(--accent);
+  }
+  .kicker {
+    font-family: var(--font-sans);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+  }
+  .featured-title {
+    font-family: var(--font-sans);
+    font-size: 1.6rem;
+    margin: 0 0 0.75rem;
+    text-transform: none;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  .featured-blurb {
+    margin: 0;
+    font-size: 1.02rem;
+    line-height: 1.55;
+    max-width: 44rem;
+  }
+  .featured-links {
+    list-style: none;
+    padding: 0;
+    margin: 1.25rem 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.25rem;
+    font-family: var(--font-sans);
+    font-size: 0.92rem;
+  }
+  .featured-links li::before {
+    content: "→";
+    color: var(--muted);
+    margin-right: 0.4rem;
+  }
+
+  /* ── Three column "what we do" ────────────────────────── */
+  .threecol {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin: 4rem 0;
+  }
+  .threecol h3 {
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    margin: 0 0 0.75rem;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--ink);
+  }
+  .threecol p {
+    margin: 0 0 0.6rem;
+    font-size: 0.95rem;
+    line-height: 1.55;
+    color: var(--ink-soft);
+  }
+  .threecol p.link {
+    font-family: var(--font-sans);
+    font-size: 0.88rem;
+    margin-top: 0.5rem;
+  }
+
+  /* ── Activity timeline ────────────────────────────────── */
+  .activity {
+    margin: 4rem 0 0;
+    padding-top: 2rem;
+    border-top: 1px solid var(--rule);
+  }
+  .activity h2 {
+    font-family: var(--font-sans);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin: 0 0 1rem;
+  }
+  .timeline {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .timeline li {
+    display: grid;
+    grid-template-columns: 7rem 1fr;
+    gap: 1.25rem;
+    padding: 0.65rem 0;
+    border-bottom: 1px solid var(--rule);
+    font-size: 0.95rem;
+  }
+  .timeline li:last-child { border-bottom: none; }
+  .timeline time {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .timeline span { color: var(--ink-soft); }
+  .timeline strong { color: var(--ink); font-weight: 500; }
+
+  @media (max-width: 800px) {
+    .hero {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+    .hero h1 { font-size: 1.9rem; }
+    .threecol { grid-template-columns: 1fr; gap: 1.5rem; }
+    .timeline li { grid-template-columns: 5rem 1fr; gap: 0.75rem; }
+  }
+</style>

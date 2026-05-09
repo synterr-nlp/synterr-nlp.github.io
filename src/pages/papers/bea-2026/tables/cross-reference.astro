@@ -1,0 +1,39 @@
+---
+import BaseLayout from "../../../../layouts/BaseLayout.astro";
+import XlsxView from "../../../../components/XlsxView.astro";
+---
+
+<BaseLayout
+  title="Taxonomy cross-reference (cross_reference.xlsx)"
+  description="98 fine-grained Rozental tags × corpus tagsets (RLC, RULEC-GEC, GERA, LoRuGEC) with L2 applicability."
+  wide={true}
+>
+  <p style="font-family: var(--font-sans); font-size: 0.9rem; margin: 0 0 0.5rem;">
+    <a href="/papers/bea-2026/">← BEA 2026 paper</a>
+  </p>
+
+  <h1>Taxonomy cross-reference</h1>
+
+  <p style="margin: 1rem 0 1.5rem; color: var(--ink-soft);">
+    Each row is one of the 98 fine-grained Rozental tags. Columns map the tag
+    to the corresponding category in each existing corpus tagset (RLC,
+    RULEC-GEC, GERA, LoRuGEC) and note L2 applicability. Cell colors carry
+    meaning: yellow for covered, red for not, green for high confidence —
+    the rendering is parsed live from the .xlsx, so it matches the source.
+  </p>
+
+  <h2>L2 Coverage</h2>
+  <XlsxView
+    src="/papers/bea-2026/cross_reference.xlsx"
+    sheet="L2 Coverage"
+    caption="Source: cross_reference.xlsx · sheet `L2 Coverage`"
+  />
+
+  <details style="margin-top: 2rem;">
+    <summary style="cursor: pointer; font-family: var(--font-sans); color: var(--ink-soft);">Legend</summary>
+    <XlsxView
+      src="/papers/bea-2026/cross_reference.xlsx"
+      sheet="Legend"
+    />
+  </details>
+</BaseLayout>

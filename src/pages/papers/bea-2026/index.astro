@@ -1,0 +1,156 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import Figure from "../../../components/Figure.astro";
+---
+
+<BaseLayout
+  title="What Aggregate Scores Hide (BEA 2026)"
+  description="Companion site for our BEA 2026 paper on per-rule evaluation of Russian GEC."
+>
+  <header>
+    <h1>What Aggregate Scores Hide</h1>
+    <p style="font-family: var(--font-sans); font-weight: 500; font-size: 1.15rem; color: var(--ink-soft); margin: 0.6rem 0 1.5rem; line-height: 1.3;">
+      Per-Rule Evaluation of Russian Grammatical Error Correction
+    </p>
+    <p style="font-size: 0.95rem; color: var(--ink-soft); margin: 0; line-height: 1.55;">
+      Anna Smirnova<sup>1</sup>,
+      Artyom Kopan<sup>2</sup>,
+      Vladislav Makeev<sup>2</sup>,
+      George Chernishev<sup>2</sup>
+      <br />
+      <span style="color: var(--muted); font-size: 0.9rem;">
+        <sup>1</sup>HEC Lausanne, University of Lausanne &nbsp;
+        <sup>2</sup>Saint Petersburg State University
+      </span>
+      <br />
+      <span style="font-size: 0.95rem; display: inline-block; margin-top: 0.5rem;">
+        Accepted at <a href="https://2026.aclweb.org/" rel="external">ACL BEA 2026</a>
+      </span>
+    </p>
+  </header>
+
+  <section style="font-size: 1.1rem; line-height: 1.6; margin: 2.5rem 0;">
+    <p>
+      Models can improve on a benchmark while getting worse at specific things.
+      Aggregate metrics can&apos;t tell you. We built a diagnostic that can: a
+      98-category error taxonomy grounded in Rozental&apos;s reference grammar that lets
+      us evaluate Russian grammatical error correction rule by rule. The diagnostic
+      surfaced what the aggregate hid.
+    </p>
+  </section>
+
+  <Figure
+    src="/papers/bea-2026/figures/aggregate-vs-rule.svg"
+    alt="Aggregate F0.5 rises with model size while subordinate-clause comma accuracy collapses."
+    caption="Aggregate F0.5 rises with parameter count across all eight fine-tuned models. The subordinate-clause comma rule collapses to 1%, hidden in the average. (Schematic; the per-rule numbers behind it are in /tables/per-rule/.)"
+  />
+
+  <p style="margin: 0.5rem 0 1.5rem; font-family: var(--font-sans); font-size: 0.95rem;">
+    For the full argument as a four-panel walkthrough, see
+    <a href="/papers/bea-2026/overview/"><strong>the graphical overview →</strong></a>
+  </p>
+
+  <section style="background: var(--bg-soft); padding: 1.25rem 1.5rem; border-radius: 4px; margin: 2.5rem 0;">
+    <p style="margin: 0;">
+      Across eight models from 0.8B to 12B parameters, fine-tuning on synthetic data
+      raised overall F<sub>0.5</sub> but drove subordinate-clause comma accuracy from
+      14% to 1%. The cause is directional skew in the training data: SyntErr generates
+      comma insertion errors 3.6× more often than deletion errors, so models learn to
+      preserve commas rather than remove them. Aggregate F<sub>0.5</sub> rose because
+      spelling gains outweighed punctuation losses. Continuation training on 348 real
+      examples recovers the affected rules from 1% to 69%; the suppression is reversible,
+      but only once it is diagnosed.
+    </p>
+  </section>
+
+  <section style="margin: 3rem 0;">
+    <h2>Browse the data</h2>
+    <ul class="artifact-list">
+      <li>
+        <span class="artifact-name">Taxonomy cross-reference (98 fine tags × corpus tagsets)</span>
+        <span class="artifact-link"><a href="/papers/bea-2026/tables/cross-reference/">browse</a></span>
+      </li>
+      <li>
+        <span class="artifact-name">Evidence table (213 §§ × 4 corpora)</span>
+        <span class="artifact-link"><a href="/papers/bea-2026/tables/evidence-table/">browse</a></span>
+      </li>
+      <li>
+        <span class="artifact-name">Per-rule LoRuGEC scores (48 × 35 conditions)</span>
+        <span class="artifact-link"><a href="/papers/bea-2026/tables/per-rule/">browse</a></span>
+      </li>
+      <li>
+        <span class="artifact-name">Reasoning chains: Qwen3.5-9B think (612 chains)</span>
+        <span class="artifact-link"><a href="/papers/bea-2026/tables/reasoning-9b/">browse</a></span>
+      </li>
+      <li>
+        <span class="artifact-name">Reasoning chains: Qwen3.5-35B think (612 chains)</span>
+        <span class="artifact-link"><a href="/papers/bea-2026/tables/reasoning-35b/">browse</a></span>
+      </li>
+    </ul>
+  </section>
+
+  <section style="margin: 3rem 0;">
+    <h2>Download</h2>
+    <ul class="artifact-list">
+      <li>
+        <span class="artifact-name">Paper (camera-ready PDF)</span>
+        <span class="artifact-link"><a href="/papers/bea-2026/paper.pdf">paper.pdf</a> <small class="todo">added after May 12</small></span>
+      </li>
+      <li>
+        <span class="artifact-name">SyntErr generator (code)</span>
+        <span class="artifact-link"><a href="https://github.com/synterr-nlp/synterr" rel="external">github.com/synterr-nlp/synterr</a></span>
+      </li>
+      <li>
+        <span class="artifact-name">Adapter weights (26 LoRAs, 5 GB)</span>
+        <span class="artifact-link"><a href="https://huggingface.co/synterr-nlp" rel="external">Hugging Face Hub</a> <small class="todo">uploading before May 12</small></span>
+      </li>
+      <li>
+        <span class="artifact-name">Cross-reference (raw xlsx)</span>
+        <span class="artifact-link"><a href="/papers/bea-2026/cross_reference.xlsx">cross_reference.xlsx</a></span>
+      </li>
+      <li>
+        <span class="artifact-name">Evidence table (raw xlsx)</span>
+        <span class="artifact-link"><a href="/papers/bea-2026/evidence_table.xlsx">evidence_table.xlsx</a></span>
+      </li>
+      <li>
+        <span class="artifact-name">Per-rule LoRuGEC eval (CSV)</span>
+        <span class="artifact-link"><a href="/papers/bea-2026/per_rule_lorugec.csv">per_rule_lorugec.csv</a></span>
+      </li>
+      <li>
+        <span class="artifact-name">Reasoning vs zero-shot (CSV, R1.Q2)</span>
+        <span class="artifact-link"><a href="/papers/bea-2026/per_rule_thinking_vs_zs.csv">per_rule_thinking_vs_zs.csv</a></span>
+      </li>
+      <li>
+        <span class="artifact-name">Qwen3.5-9B reasoning chains (JSONL)</span>
+        <span class="artifact-link"><a href="/papers/bea-2026/qwen35_9b_think_lorugec_test.jsonl">qwen35_9b_think_lorugec_test.jsonl</a></span>
+      </li>
+      <li>
+        <span class="artifact-name">Qwen3.5-35B reasoning chains (JSONL)</span>
+        <span class="artifact-link"><a href="/papers/bea-2026/qwen35_35b_think_lorugec_test.jsonl">qwen35_35b_think_lorugec_test.jsonl</a></span>
+      </li>
+      <li>
+        <span class="artifact-name">Whole BEA supplementary bundle</span>
+        <span class="artifact-link"><a href="/papers/bea-2026/supplementary.zip">supplementary.zip</a></span>
+      </li>
+      <li>
+        <span class="artifact-name">UNIL AI Day abstract</span>
+        <span class="artifact-link"><a href="/papers/bea-2026/unil_ai_day_abstract.pdf">unil_ai_day_abstract.pdf</a> <small class="todo">added when finalized</small></span>
+      </li>
+      <li>
+        <span class="artifact-name">Poster</span>
+        <span class="artifact-link"><a href="/papers/bea-2026/poster.pdf">poster.pdf</a> <small class="todo">in progress</small></span>
+      </li>
+    </ul>
+  </section>
+
+  <section style="margin: 3rem 0;">
+    <h2>Cite</h2>
+    <pre><code>{`@inproceedings{smirnova2026aggregate,
+  title     = {What Aggregate Scores Hide: Per-Rule Evaluation of Russian Grammatical Error Correction},
+  author    = {Smirnova, Anna and Kopan, Artyom and Makeev, Vladislav and Chernishev, George},
+  booktitle = {Proceedings of the 21st Workshop on Innovative Use of NLP for Building Educational Applications (BEA)},
+  year      = {2026},
+  url       = {https://synterr-nlp.github.io/papers/bea-2026/},
+}`}</code></pre>
+  </section>
+</BaseLayout>

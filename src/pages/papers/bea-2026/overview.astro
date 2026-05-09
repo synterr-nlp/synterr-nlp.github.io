@@ -1,0 +1,189 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import Figure from "../../../components/Figure.astro";
+---
+
+<BaseLayout
+  title="Graphical overview · BEA 2026"
+  description="The paper's argument in four panels. From aggregate gain to rule-level loss to mechanism to fix."
+>
+  <p style="font-family: var(--font-sans); font-size: 0.9rem; margin: 0 0 0.5rem;">
+    <a href="/papers/bea-2026/">← BEA 2026 paper</a>
+  </p>
+
+  <h1>The argument in four panels</h1>
+
+  <p style="margin: 1rem 0 2rem; font-size: 1.05rem; color: var(--ink-soft); line-height: 1.6;">
+    A graphical walk through the paper's claim. Each panel is one beat:
+    aggregate metrics rise, specific rules silently collapse, the cause is
+    a directional bias in the synthetic data, and a brief continuation pass
+    on real examples reverses it.
+  </p>
+
+  <!-- ── Panel 1 ─────────────────────────────────────────────────── -->
+  <section class="ov-panel">
+    <div class="ov-num">1</div>
+    <div class="ov-text">
+      <h2 class="ov-h">Aggregate gets better</h2>
+      <p>
+        Across eight open models from 0.8B to 12B parameters, fine-tuning on
+        SyntErr-generated synthetic data raises overall F<sub>0.5</sub> on
+        LoRuGEC. The story you would tell from the leaderboard is that
+        synthetic data works.
+      </p>
+    </div>
+    <div class="ov-fig">
+      <Figure
+        src="/papers/bea-2026/figures/aggregate-vs-rule.svg"
+        alt="Aggregate F0.5 rises with model size while one specific rule drops."
+        caption="Grey: aggregate F₀.₅. Red: subordinate-clause comma rule (Panel 2)."
+      />
+    </div>
+  </section>
+
+  <!-- ── Panel 2 ─────────────────────────────────────────────────── -->
+  <section class="ov-panel ov-panel-alt">
+    <div class="ov-num">2</div>
+    <div class="ov-text">
+      <h2 class="ov-h">But specific rules collapse</h2>
+      <p>
+        The diagnostic, anchored in 98 rules from Rozental's reference grammar,
+        breaks the aggregate apart. Most rules track the trend up. A handful go
+        the other way: subordinate-clause comma accuracy drops from 14% to 1%,
+        parenthetical commas similarly. The aggregate hides this because the
+        rising rules outweigh the collapsing ones.
+      </p>
+    </div>
+    <div class="ov-fig">
+      <Figure
+        src="/papers/bea-2026/figures/multi-rule.svg"
+        alt="Eight per-rule F0.5 curves. Six go up; two go down."
+        caption="Per-rule trends across 8 model sizes. Grey: improves with fine-tuning. Red: regresses."
+      />
+    </div>
+  </section>
+
+  <!-- ── Panel 3 ─────────────────────────────────────────────────── -->
+  <section class="ov-panel">
+    <div class="ov-num">3</div>
+    <div class="ov-text">
+      <h2 class="ov-h">The mechanism is directional skew</h2>
+      <p>
+        The training data is not symmetric. SyntErr generates comma
+        <em>insertion</em> errors 3.6× more often than comma
+        <em>deletion</em> errors. A model trained on this learns a one-sided
+        rule: "preserve commas". On the LoRuGEC test set, where the gold edit
+        is to remove a comma, the model refuses.
+      </p>
+    </div>
+    <div class="ov-fig">
+      <Figure
+        src="/papers/bea-2026/figures/direction-skew.svg"
+        alt="A bar chart showing 78% comma insertions vs 22% comma deletions in SyntErr training data."
+        caption="Comma error directions in SyntErr's output. The 3.6× skew explains the suppression."
+      />
+    </div>
+  </section>
+
+  <!-- ── Panel 4 ─────────────────────────────────────────────────── -->
+  <section class="ov-panel ov-panel-alt">
+    <div class="ov-num">4</div>
+    <div class="ov-text">
+      <h2 class="ov-h">A brief continuation reverses it</h2>
+      <p>
+        The suppressed rules can be recovered by training for a short pass on
+        real examples that exhibit the missing direction. With just 348
+        LoRuGEC sentences, subordinate-clause comma accuracy goes from 1%
+        back to 69%, while the rules that improved through SyntErr stay where
+        they were.
+      </p>
+    </div>
+    <div class="ov-fig">
+      <Figure
+        src="/papers/bea-2026/figures/recovery.svg"
+        alt="Slope chart from 1% to 69% on subordinate-clause comma after continuation."
+        caption="Suppressed rules recover with a 348-example continuation pass."
+      />
+    </div>
+  </section>
+
+  <!-- ── Takeaway ────────────────────────────────────────────────── -->
+  <section style="margin: 3.5rem 0 0; padding: 1.75rem 1.75rem; background: var(--bg-soft); border-left: 3px solid var(--accent); border-radius: 4px;">
+    <h2 style="margin-bottom: 0.6rem; color: var(--ink); text-transform: none; letter-spacing: 0; font-size: 1.05rem;">Takeaway</h2>
+    <p style="margin: 0;">
+      Aggregate metrics make synthetic-data fine-tuning look like a uniform
+      improvement. Per-rule evaluation makes the directional damage visible.
+      Once visible, it is fixable. The taxonomy is the diagnostic; the
+      diagnostic is the fix.
+    </p>
+  </section>
+
+  <p style="margin: 2.5rem 0 0; font-family: var(--font-sans); font-size: 0.9rem;">
+    <a href="/papers/bea-2026/">Read the paper page</a>
+    &nbsp;·&nbsp;
+    <a href="/papers/bea-2026/tables/per-rule/">Per-rule table</a>
+    &nbsp;·&nbsp;
+    <a href="/papers/bea-2026/tables/reasoning-9b/">Reasoning chains</a>
+  </p>
+</BaseLayout>
+
+<style>
+  .ov-panel {
+    display: grid;
+    grid-template-columns: 4rem 1fr;
+    grid-template-rows: auto auto;
+    gap: 1rem 1.5rem;
+    margin: 3rem 0;
+    padding: 0;
+    align-items: start;
+  }
+  .ov-num {
+    grid-row: 1 / 3;
+    font-family: var(--font-sans);
+    font-size: 2.4rem;
+    font-weight: 600;
+    color: var(--accent);
+    line-height: 1;
+    text-align: right;
+    opacity: 0.8;
+  }
+  .ov-text {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .ov-text p {
+    margin: 0.4rem 0 0;
+    font-size: 1.02rem;
+    line-height: 1.55;
+  }
+  .ov-h {
+    font-family: var(--font-sans);
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 0;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .ov-fig {
+    grid-column: 2;
+    grid-row: 2;
+    margin-top: 0.5rem;
+  }
+  .ov-fig :global(.figure) {
+    margin: 0.5rem 0 0;
+  }
+
+  @media (max-width: 700px) {
+    .ov-panel {
+      grid-template-columns: 1fr;
+    }
+    .ov-num {
+      grid-row: 1;
+      text-align: left;
+      font-size: 1.8rem;
+    }
+    .ov-text { grid-column: 1; grid-row: 2; }
+    .ov-fig { grid-column: 1; grid-row: 3; }
+  }
+</style>

@@ -1,0 +1,352 @@
+---
+/**
+ * Reasoning-chain viewer for *_think_lorugec_test.jsonl files.
+ *
+ * Each JSONL has 612 per-example records (line 1 is model metadata,
+ * skipped). Each record has: id, rule, src, tgt, pred, reasoning.
+ *
+ * Renders one row per example, filterable by rule (dropdown) and
+ * by free-text (input). Each row expands on click to show the
+ * full <think>...</think> chain in monospace.
+ */
+interface Props {
+  src: string;
+  caption?: string;
+}
+
+const { src, caption } = Astro.props;
+const id = `rt-${Math.random().toString(36).slice(2, 9)}`;
+---
+
+<figure class="rt-wrap">
+  {caption && <figcaption class="rt-caption">{caption}</figcaption>}
+
+  <div class="rt-toolbar">
+    <select class="rt-rule" data-target={id} aria-label="Filter by rule">
+      <option value="">all rules</option>
+    </select>
+    <input type="text" class="rt-search" data-target={id} placeholder="search src/tgt/pred/reasoning…" />
+    <span class="rt-counts" data-target={id}><span class="rt-shown">0</span> / <span class="rt-total">0</span> examples</span>
+    <a class="rt-download" href={src} download>download jsonl</a>
+  </div>
+
+  <div id={id} class="rt-table" data-src={src}>
+    <p class="rt-loading">loading 612 reasoning chains…</p>
+  </div>
+</figure>
+
+<script is:inline define:vars={{ id }}>
+  (function () {
+    const root = document.getElementById(id);
+    if (!root) return;
+    const src = root.dataset.src;
+    const ruleSel = document.querySelector(`.rt-rule[data-target="${id}"]`);
+    const searchInput = document.querySelector(`.rt-search[data-target="${id}"]`);
+    const countsEl = document.querySelector(`.rt-counts[data-target="${id}"]`);
+
+    function escapeHTML(s) {
+      return String(s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    function diffHighlight(srcText, tgtText) {
+      // Cheap word-level highlight: differing tokens marked.
+      const srcTokens = srcText.split(/(\s+)/);
+      const tgtTokens = tgtText.split(/(\s+)/);
+      // Just return source with bold on tokens not in tgt set
+      const tgtSet = new Set(tgtTokens);
+      return srcTokens.map((t) => {
+        if (t.trim() === "") return escapeHTML(t);
+        if (!tgtSet.has(t)) return `<mark>${escapeHTML(t)}</mark>`;
+        return escapeHTML(t);
+      }).join("");
+    }
+
+    fetch(src)
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.text();
+      })
+      .then((text) => {
+        const lines = text.split("\n").filter(Boolean);
+        // Line 0 is metadata; skip
+        const records = lines.slice(1).map((line) => {
+          try { return JSON.parse(line); } catch { return null; }
+        }).filter((r) => r && r.id);
+
+        // Build rule dropdown
+        const rules = Array.from(new Set(records.map((r) => r.rule))).sort();
+        for (const rule of rules) {
+          const opt = document.createElement("option");
+          opt.value = rule;
+          opt.textContent = rule;
+          ruleSel.appendChild(opt);
+        }
+
+        function render(filtered) {
+          const html = filtered.map((r, i) => {
+            const realIdx = records.indexOf(r);
+            const correct = (r.pred || "").trim() === (r.tgt_detok || r.tgt || "").trim();
+            return `
+              <details class="rt-row" data-idx="${realIdx}">
+                <summary>
+                  <div class="rt-meta">
+                    <span class="rt-id">${escapeHTML(r.id)}</span>
+                    <span class="rt-rule-tag">${escapeHTML(r.rule)}</span>
+                    <span class="rt-verdict ${correct ? "ok" : "miss"}">${correct ? "✓ correct" : "✗ miss"}</span>
+                  </div>
+                  <div class="rt-sentences">
+                    <span class="rt-src">${diffHighlight(r.src_detok || r.src, r.tgt_detok || r.tgt)}</span>
+                    <span class="rt-arrow">→</span>
+                    <span class="rt-pred">${escapeHTML(r.pred)}</span>
+                  </div>
+                </summary>
+                <div class="rt-detail">
+                  <table class="rt-fields">
+                    <tr><th>source</th><td>${escapeHTML(r.src_detok || r.src)}</td></tr>
+                    <tr><th>target</th><td>${escapeHTML(r.tgt_detok || r.tgt)}</td></tr>
+                    <tr><th>prediction</th><td>${escapeHTML(r.pred)}</td></tr>
+                  </table>
+                  <h4>reasoning</h4>
+                  <pre class="rt-think">${escapeHTML(r.reasoning)}</pre>
+                </div>
+              </details>
+            `;
+          }).join("");
+          root.innerHTML = html;
+          countsEl.querySelector(".rt-shown").textContent = filtered.length;
+        }
+
+        function applyFilters() {
+          const ruleVal = ruleSel.value;
+          const q = (searchInput.value || "").toLowerCase().trim();
+          let out = records;
+          if (ruleVal) out = out.filter((r) => r.rule === ruleVal);
+          if (q) {
+            out = out.filter((r) => {
+              const blob = `${r.src} ${r.tgt} ${r.pred} ${r.reasoning}`.toLowerCase();
+              return blob.includes(q);
+            });
+          }
+          render(out);
+        }
+
+        countsEl.querySelector(".rt-total").textContent = records.length;
+        render(records);
+
+        ruleSel.addEventListener("change", applyFilters);
+        let searchTimeout;
+        searchInput.addEventListener("input", () => {
+          clearTimeout(searchTimeout);
+          searchTimeout = setTimeout(applyFilters, 200);
+        });
+      })
+      .catch((err) => {
+        root.innerHTML = `<p class="rt-error">Failed to load ${src}: ${err.message}</p>`;
+      });
+  })();
+</script>
+
+<style is:inline>
+  .rt-wrap { margin: 2rem 0; }
+  .rt-caption {
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    color: var(--muted);
+    margin: 0 0 0.5rem;
+  }
+  .rt-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+  }
+  .rt-rule {
+    flex: 1;
+    min-width: 14rem;
+    max-width: 26rem;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 0.9rem;
+  }
+  .rt-search {
+    flex: 2;
+    min-width: 12rem;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 0.9rem;
+  }
+  .rt-rule:focus, .rt-search:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .rt-counts {
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+  .rt-download {
+    color: var(--ink-soft);
+    border-bottom: none;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+  }
+  .rt-loading, .rt-error {
+    padding: 1rem;
+    color: var(--muted);
+    font-family: var(--font-sans);
+  }
+  .rt-error { color: var(--accent); }
+
+  .rt-table {
+    border-top: 1px solid var(--rule);
+  }
+
+  .rt-row {
+    border-bottom: 1px solid var(--rule);
+  }
+  .rt-row > summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 0.7rem 1rem 0.7rem 2.2rem;
+    position: relative;
+  }
+  .rt-row > summary::-webkit-details-marker { display: none; }
+  .rt-row > summary::before {
+    content: "▸";
+    color: var(--muted);
+    position: absolute;
+    left: 0.8rem;
+    top: 0.85rem;
+    transition: transform 0.15s;
+    font-size: 0.8rem;
+  }
+  .rt-row[open] > summary::before { transform: rotate(90deg); }
+  .rt-row:hover > summary { background: var(--bg-soft); }
+
+  .rt-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem 1rem;
+    align-items: baseline;
+    font-family: var(--font-sans);
+    font-size: 0.78rem;
+    margin-bottom: 0.35rem;
+  }
+  .rt-id {
+    font-family: var(--font-mono);
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+  .rt-rule-tag {
+    color: var(--ink-soft);
+    flex: 1;
+    min-width: 0;
+  }
+  .rt-verdict {
+    flex-shrink: 0;
+    font-weight: 500;
+    padding: 0.05rem 0.45rem;
+    border-radius: 3px;
+    font-size: 0.72rem;
+    letter-spacing: 0.02em;
+  }
+  .rt-verdict.ok {
+    color: #2d7a3a;
+    background: rgba(45, 122, 58, 0.1);
+  }
+  .rt-verdict.miss {
+    color: var(--accent);
+    background: rgba(179, 38, 30, 0.1);
+  }
+  @media (prefers-color-scheme: dark) {
+    .rt-verdict.ok { color: #6ec27c; background: rgba(110, 194, 124, 0.1); }
+  }
+
+  .rt-sentences {
+    font-family: var(--font-serif);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: var(--ink);
+  }
+  .rt-arrow {
+    color: var(--muted);
+    margin: 0 0.5rem;
+    font-family: var(--font-sans);
+  }
+  .rt-pred {
+    color: var(--ink-soft);
+  }
+  .rt-src mark {
+    background: rgba(179, 38, 30, 0.18);
+    color: var(--ink);
+    padding: 0 2px;
+    border-radius: 2px;
+  }
+
+  .rt-detail {
+    padding: 0.5rem 1rem 1.25rem 2rem;
+    background: var(--bg-soft);
+    border-top: 1px solid var(--rule);
+  }
+  .rt-fields {
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+    font-size: 0.92rem;
+  }
+  .rt-fields th {
+    text-align: left;
+    color: var(--muted);
+    font-family: var(--font-sans);
+    font-weight: 500;
+    padding: 0.2rem 1rem 0.2rem 0;
+    vertical-align: top;
+    width: 6rem;
+  }
+  .rt-fields td {
+    padding: 0.2rem 0;
+    color: var(--ink);
+    font-family: var(--font-serif);
+  }
+  .rt-detail h4 {
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin: 1rem 0 0.4rem;
+    font-weight: 600;
+  }
+  .rt-think {
+    background: var(--bg);
+    border: 1px solid var(--rule);
+    padding: 0.75rem 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    max-height: 30rem;
+    overflow-y: auto;
+    margin: 0;
+  }
+
+  @media (max-width: 700px) {
+    .rt-row > summary {
+      grid-template-columns: 1fr;
+      gap: 0.25rem;
+    }
+    .rt-rule-tag { font-size: 0.75rem; }
+  }
+</style>

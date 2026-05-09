@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320" font-family="-apple-system, BlinkMacSystemFont, Helvetica Neue, sans-serif">
+  <style>
+    .label    { fill: currentColor; font-size: 13px; font-weight: 500; }
+    .tick     { fill: currentColor; opacity: 0.6; font-size: 11px; }
+    .col-hdr  { fill: currentColor; font-size: 12px; font-weight: 500; opacity: 0.85; }
+    .col-sub  { fill: currentColor; font-size: 11px; opacity: 0.6; }
+    .axis     { stroke: currentColor; stroke-width: 1; opacity: 0.3; }
+    .grid     { stroke: currentColor; stroke-width: 0.5; opacity: 0.12; }
+    .slope    { stroke: #b3261e; stroke-width: 2.2; stroke-linecap: round; }
+    .dot-l    { fill: #b3261e; opacity: 0.45; }
+    .dot-r    { fill: #b3261e; }
+    .label-l  { fill: currentColor; font-size: 11px; opacity: 0.7; font-variant-numeric: tabular-nums; }
+    .label-r  { fill: currentColor; font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; }
+    .rule-l   { fill: currentColor; font-size: 11px; }
+    @media (prefers-color-scheme: dark) {
+      .slope { stroke: #e87c75; }
+      .dot-l { fill: #e87c75; opacity: 0.5; }
+      .dot-r { fill: #e87c75; }
+    }
+  </style>
+
+  <!-- column headers -->
+  <text class="col-hdr" x="280" y="28" text-anchor="middle">After SyntErr fine-tuning</text>
+  <text class="col-sub" x="280" y="44" text-anchor="middle">(suppressed)</text>
+
+  <text class="col-hdr" x="540" y="28" text-anchor="middle">After 348-example continuation</text>
+  <text class="col-sub" x="540" y="44" text-anchor="middle">(recovered)</text>
+
+  <!-- y-axis: 0 to 100 -->
+  <line class="axis" x1="220" y1="80" x2="220" y2="270" />
+  <line class="axis" x1="600" y1="80" x2="600" y2="270" />
+
+  <!-- y-axis ticks -->
+  <text class="tick" text-anchor="end" x="212" y="84">100</text>
+  <text class="tick" text-anchor="end" x="212" y="148">66</text>
+  <text class="tick" text-anchor="end" x="212" y="212">33</text>
+  <text class="tick" text-anchor="end" x="212" y="274">0</text>
+  <line class="grid" x1="220" y1="80" x2="600" y2="80" />
+  <line class="grid" x1="220" y1="148" x2="600" y2="148" />
+  <line class="grid" x1="220" y1="212" x2="600" y2="212" />
+  <line class="grid" x1="220" y1="270" x2="600" y2="270" />
+
+  <!-- slope lines: from (220, y_left) to (600, y_right). y = 270 - score*1.9 -->
+
+  <!-- Subordinate comma: 1% → 69% -->
+  <line class="slope" x1="220" y1="268.1" x2="600" y2="139.9" />
+  <circle class="dot-l" cx="220" cy="268.1" r="4" />
+  <circle class="dot-r" cx="600" cy="139.9" r="4" />
+  <text class="label-l" text-anchor="end" x="214" y="271">1</text>
+  <text class="label-r" text-anchor="start" x="606" y="143">69</text>
+  <text class="rule-l" text-anchor="end" x="214" y="285">subordinate-clause comma</text>
+
+  <!-- Compound spelling went UP (28% → 85%) - already up, shown for contrast -->
+  <line class="slope" style="stroke-opacity: 0.45;" x1="220" y1="216.8" x2="600" y2="108.5" />
+  <circle class="dot-l" style="fill-opacity: 0.35;" cx="220" cy="216.8" r="3.5" />
+  <circle class="dot-r" style="fill-opacity: 0.55;" cx="600" cy="108.5" r="3.5" />
+  <text class="label-l" text-anchor="end" x="214" y="220">28</text>
+  <text class="label-r" text-anchor="start" x="606" y="112">85</text>
+
+  <!-- caption -->
+  <text class="rule-l" x="60" y="305" style="opacity: 0.65;">
+    Suppressed rules recover with brief continuation training on real examples.
+  </text>
+</svg>

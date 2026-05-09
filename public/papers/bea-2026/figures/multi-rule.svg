@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 360" font-family="-apple-system, BlinkMacSystemFont, Helvetica Neue, sans-serif">
+  <style>
+    .lbl-rule { fill: currentColor; font-size: 11px; font-weight: 500; }
+    .lbl-pct  { fill: currentColor; font-size: 10px; opacity: 0.7; font-variant-numeric: tabular-nums; }
+    .grid     { stroke: currentColor; stroke-width: 0.5; opacity: 0.12; }
+    .axis     { stroke: currentColor; stroke-width: 0.8; opacity: 0.3; }
+    .line-up  { stroke: #6b6b6b; stroke-width: 1.8; fill: none; opacity: 0.55; stroke-linecap: round; }
+    .line-down{ stroke: #b3261e; stroke-width: 2; fill: none; stroke-linecap: round; }
+    .dot-up   { fill: #6b6b6b; opacity: 0.55; }
+    .dot-down { fill: #b3261e; }
+    .head     { fill: currentColor; font-size: 13px; font-weight: 500; }
+    @media (prefers-color-scheme: dark) {
+      .line-down { stroke: #e87c75; }
+      .dot-down  { fill: #e87c75; }
+    }
+  </style>
+
+  <text class="head" x="40" y="24">Per-rule trends across model sizes</text>
+  <text class="lbl-pct" x="40" y="40">Most rules track aggregate (grey, up). A few collapse with fine-tuning (red, down).</text>
+
+  <!-- Grid of small multiples: 4 cols × 2 rows. each tile = 150x110 -->
+  <!-- Layout helpers: tile (x_origin, y_origin), 130 wide × 70 tall plot area -->
+
+  <g transform="translate(40, 70)">
+    <!-- Tile 1: spelling, going up -->
+    <text class="lbl-rule" x="0" y="0">Spelling: vowel reduction</text>
+    <text class="lbl-pct"  x="0" y="92" text-anchor="start">42 → 91</text>
+    <line class="axis" x1="0" y1="80" x2="130" y2="80" />
+    <polyline class="line-up" points="0,55 22,52 44,46 66,38 88,28 110,18 130,12" />
+    <circle class="dot-up" cx="0" cy="55" r="2.5"/><circle class="dot-up" cx="130" cy="12" r="2.5"/>
+  </g>
+
+  <g transform="translate(210, 70)">
+    <!-- Tile 2: noun case, going up -->
+    <text class="lbl-rule" x="0" y="0">Noun case (governed)</text>
+    <text class="lbl-pct"  x="0" y="92">35 → 78</text>
+    <line class="axis" x1="0" y1="80" x2="130" y2="80" />
+    <polyline class="line-up" points="0,62 22,57 44,49 66,42 88,35 110,29 130,24" />
+    <circle class="dot-up" cx="0" cy="62" r="2.5"/><circle class="dot-up" cx="130" cy="24" r="2.5"/>
+  </g>
+
+  <g transform="translate(380, 70)">
+    <!-- Tile 3: subordinate comma, going DOWN -->
+    <text class="lbl-rule" x="0" y="0">Subordinate-clause comma</text>
+    <text class="lbl-pct"  x="0" y="92" style="fill: #b3261e; font-weight:600;">14 → 1</text>
+    <line class="axis" x1="0" y1="80" x2="130" y2="80" />
+    <polyline class="line-down" points="0,68 22,71 44,73 66,76 88,78 110,79 130,79" />
+    <circle class="dot-down" cx="0" cy="68" r="2.7"/><circle class="dot-down" cx="130" cy="79" r="2.7"/>
+  </g>
+
+  <g transform="translate(550, 70)">
+    <!-- Tile 4: parenthetical comma, going DOWN -->
+    <text class="lbl-rule" x="0" y="0">Parenthetical commas</text>
+    <text class="lbl-pct"  x="0" y="92" style="fill: #b3261e; font-weight:600;">22 → 5</text>
+    <line class="axis" x1="0" y1="80" x2="130" y2="80" />
+    <polyline class="line-down" points="0,62 22,66 44,69 66,72 88,75 110,77 130,76" />
+    <circle class="dot-down" cx="0" cy="62" r="2.7"/><circle class="dot-down" cx="130" cy="76" r="2.7"/>
+  </g>
+
+  <g transform="translate(40, 200)">
+    <text class="lbl-rule" x="0" y="0">пре- / при- prefix</text>
+    <text class="lbl-pct"  x="0" y="92">31 → 72</text>
+    <line class="axis" x1="0" y1="80" x2="130" y2="80" />
+    <polyline class="line-up" points="0,62 22,57 44,52 66,47 88,40 110,34 130,28" />
+    <circle class="dot-up" cx="0" cy="62" r="2.5"/><circle class="dot-up" cx="130" cy="28" r="2.5"/>
+  </g>
+
+  <g transform="translate(210, 200)">
+    <text class="lbl-rule" x="0" y="0">Compound writing</text>
+    <text class="lbl-pct"  x="0" y="92">28 → 85</text>
+    <line class="axis" x1="0" y1="80" x2="130" y2="80" />
+    <polyline class="line-up" points="0,62 22,55 44,46 66,38 88,30 110,22 130,15" />
+    <circle class="dot-up" cx="0" cy="62" r="2.5"/><circle class="dot-up" cx="130" cy="15" r="2.5"/>
+  </g>
+
+  <g transform="translate(380, 200)">
+    <text class="lbl-rule" x="0" y="0">Government (case frame)</text>
+    <text class="lbl-pct"  x="0" y="92">26 → 64</text>
+    <line class="axis" x1="0" y1="80" x2="130" y2="80" />
+    <polyline class="line-up" points="0,68 22,62 44,55 66,49 88,42 110,38 130,32" />
+    <circle class="dot-up" cx="0" cy="68" r="2.5"/><circle class="dot-up" cx="130" cy="32" r="2.5"/>
+  </g>
+
+  <g transform="translate(550, 200)">
+    <text class="lbl-rule" x="0" y="0">+ 41 more rules…</text>
+    <text class="lbl-pct"  x="0" y="92" style="opacity: 0.5;">distribution</text>
+    <line class="axis" x1="0" y1="80" x2="130" y2="80" />
+    <!-- summarized: many up lines + a couple down lines, faded -->
+    <polyline class="line-up" style="opacity: 0.3;" points="0,55 22,50 44,42 66,35 88,28 110,22 130,16" />
+    <polyline class="line-up" style="opacity: 0.3;" points="0,62 22,57 44,52 66,47 88,42 110,38 130,33" />
+    <polyline class="line-up" style="opacity: 0.3;" points="0,70 22,65 44,58 66,52 88,46 110,40 130,35" />
+    <polyline class="line-down" style="opacity: 0.3;" points="0,60 22,64 44,68 66,71 88,74 110,77 130,79" />
+  </g>
+</svg>

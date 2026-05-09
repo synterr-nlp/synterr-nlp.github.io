@@ -1,0 +1,91 @@
+---
+import "../styles/global.css";
+
+interface Props {
+  title: string;
+  description?: string;
+  wide?: boolean;
+}
+
+const { title, description, wide = false } = Astro.props;
+const fullTitle = title === "synterr-nlp" ? title : `${title} · synterr-nlp`;
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{fullTitle}</title>
+  {description && <meta name="description" content={description} />}
+  {description && <meta property="og:description" content={description} />}
+  <meta property="og:title" content={fullTitle} />
+  <meta property="og:type" content="website" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><text y=%2214%22 font-size=%2214%22>·</text></svg>" />
+</head>
+<body>
+
+<script is:inline>
+  // Apply saved theme before paint to avoid flash.
+  (function () {
+    try {
+      const t = localStorage.getItem("theme");
+      if (t === "light" || t === "dark") {
+        document.documentElement.setAttribute("data-theme", t);
+      }
+    } catch (e) {}
+  })();
+</script>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="site-name" href="/">synterr-nlp</a>
+    <nav class="site-nav">
+      <a href="/papers/">papers</a>
+      <a href="/synterr/">docs</a>
+      <a href="https://github.com/synterr-nlp/synterr" rel="external">code</a>
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle theme">◐</button>
+    </nav>
+  </div>
+</header>
+
+<script is:inline>
+  (function () {
+    const btn = document.getElementById("theme-toggle");
+    if (!btn) return;
+    btn.addEventListener("click", function () {
+      const cur = document.documentElement.getAttribute("data-theme");
+      const sysDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      // Cycle: auto -> light -> dark -> auto
+      let next;
+      if (!cur) next = sysDark ? "light" : "dark";
+      else if (cur === "light") next = "dark";
+      else next = null; // back to auto
+      if (next === null) {
+        document.documentElement.removeAttribute("data-theme");
+        try { localStorage.removeItem("theme"); } catch (e) {}
+      } else {
+        document.documentElement.setAttribute("data-theme", next);
+        try { localStorage.setItem("theme", next); } catch (e) {}
+      }
+    });
+  })();
+</script>
+
+<main class={wide ? "page-wide" : "page"}>
+  <slot />
+</main>
+
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <span>synterr-nlp · open Russian GEC research</span>
+    <span>
+      <a href="https://github.com/synterr-nlp" rel="external">github</a>
+      &nbsp;·&nbsp;
+      <a href="mailto:anna.smirnova@unil.ch">contact</a>
+    </span>
+  </div>
+</footer>
+
+</body>
+</html>

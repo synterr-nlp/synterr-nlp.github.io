@@ -1,0 +1,88 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout
+  title="Docs"
+  description="Documentation for synterr (the tool) and the synterr-nlp project."
+>
+  <h1>Docs</h1>
+
+  <p style="margin: 1rem 0 2rem; color: var(--ink-soft);">
+    Synterr's full documentation site is built from the code repo and lands at
+    <a href="/synterr/">/synterr/</a> once that repo flips public.
+    Until then, here are the canonical reference files on GitHub.
+  </p>
+
+  <section style="margin-top: 2rem;">
+    <h2>Reference</h2>
+    <ul class="artifact-list">
+      <li>
+        <span class="artifact-name">Architecture overview</span>
+        <span class="artifact-link">
+          <a href="https://github.com/synterr-nlp/synterr/blob/master/CLAUDE.md" rel="external">CLAUDE.md</a>
+        </span>
+      </li>
+      <li>
+        <span class="artifact-name">Roadmap (M1–M4 milestones)</span>
+        <span class="artifact-link">
+          <a href="https://github.com/synterr-nlp/synterr/blob/master/docs/ROADMAP.md" rel="external">ROADMAP.md</a>
+        </span>
+      </li>
+      <li>
+        <span class="artifact-name">Extending synterr (handlers, schemas, languages)</span>
+        <span class="artifact-link">
+          <a href="https://github.com/synterr-nlp/synterr/blob/master/docs/site/extending.md" rel="external">extending.md</a>
+        </span>
+      </li>
+      <li>
+        <span class="artifact-name">Contributing</span>
+        <span class="artifact-link">
+          <a href="https://github.com/synterr-nlp/synterr/blob/master/CONTRIBUTING.md" rel="external">CONTRIBUTING.md</a>
+        </span>
+      </li>
+      <li>
+        <span class="artifact-name">Changelog</span>
+        <span class="artifact-link">
+          <a href="https://github.com/synterr-nlp/synterr/blob/master/CHANGELOG.md" rel="external">CHANGELOG.md</a>
+        </span>
+      </li>
+    </ul>
+  </section>
+
+  <section style="margin-top: 2rem;">
+    <h2>Research notes</h2>
+    <ul class="artifact-list">
+      <li>
+        <span class="artifact-name">LoRuGEC coverage map (36/48 FULL, 12 PARTIAL, 0 NONE)</span>
+        <span class="artifact-link">
+          <a href="https://github.com/synterr-nlp/synterr/blob/master/docs/research/LORUGEC_COVERAGE.md" rel="external">LORUGEC_COVERAGE.md</a>
+        </span>
+      </li>
+      <li>
+        <span class="artifact-name">L2 gap audit (60 missing tags classified)</span>
+        <span class="artifact-link">
+          <a href="https://github.com/synterr-nlp/synterr/blob/master/docs/research/L2_GAP_AUDIT.md" rel="external">L2_GAP_AUDIT.md</a>
+        </span>
+      </li>
+      <li>
+        <span class="artifact-name">Punctuation heuristics (dep-tree classifier)</span>
+        <span class="artifact-link">
+          <a href="https://github.com/synterr-nlp/synterr/blob/master/docs/research/PUNCT_HEURISTICS.md" rel="external">PUNCT_HEURISTICS.md</a>
+        </span>
+      </li>
+      <li>
+        <span class="artifact-name">Case confusion patterns (RLC-derived matrices)</span>
+        <span class="artifact-link">
+          <a href="https://github.com/synterr-nlp/synterr/blob/master/docs/research/CASE_CONFUSION_PATTERNS.md" rel="external">CASE_CONFUSION_PATTERNS.md</a>
+        </span>
+      </li>
+      <li>
+        <span class="artifact-name">v4 data provenance + reproducibility</span>
+        <span class="artifact-link">
+          <a href="https://github.com/synterr-nlp/synterr/blob/master/data/V4_DATA_PROVENANCE.md" rel="external">V4_DATA_PROVENANCE.md</a>
+        </span>
+      </li>
+    </ul>
+  </section>
+</BaseLayout>

@@ -1,0 +1,61 @@
+---
+/**
+ * Inline figure with caption. Use for paper / explainer images.
+ *
+ * <Figure src="/papers/bea-2026/figures/foo.svg" alt="..." caption="..." />
+ */
+interface Props {
+  src: string;
+  alt: string;
+  caption?: string;
+  number?: string;  // e.g. "Figure 1"
+  width?: string;
+}
+
+const { src, alt, caption, number, width } = Astro.props;
+---
+
+<figure class="figure">
+  <img src={src} alt={alt} style={width ? `max-width: ${width};` : ""} />
+  {(number || caption) && (
+    <figcaption>
+      {number && <span class="fig-number">{number}.</span>}
+      {caption && <span class="fig-caption">{caption}</span>}
+    </figcaption>
+  )}
+</figure>
+
+<style is:inline>
+  .figure {
+    margin: 2.5rem 0;
+    text-align: center;
+  }
+  .figure img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    /* Paper figures are designed against white. Keep the canvas white in
+       both themes so dark text in the figure stays legible. */
+    background: white;
+    padding: 1rem;
+  }
+  .figure figcaption {
+    margin-top: 0.75rem;
+    font-family: var(--font-sans);
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    text-align: left;
+    max-width: 36rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .fig-number {
+    color: var(--muted);
+    font-weight: 600;
+    margin-right: 0.4rem;
+  }
+</style>

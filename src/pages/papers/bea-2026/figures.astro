@@ -1,0 +1,41 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import Figure from "../../../components/Figure.astro";
+---
+
+<BaseLayout
+  title="Figures"
+  description="Figures from the BEA 2026 paper, with captions."
+  wide={true}
+>
+  <p style="font-family: var(--font-sans); font-size: 0.9rem; margin: 0 0 0.5rem;">
+    <a href="/papers/bea-2026/">← BEA 2026 paper</a>
+  </p>
+
+  <h1>Figures</h1>
+
+  <p style="margin: 1rem 0 2rem; color: var(--ink-soft);">
+    All figures from the paper plus poster-ready variants. SVG where possible
+    (scale cleanly, theme-aware), PNG fallbacks for raster plots.
+  </p>
+
+  <Figure
+    src="/papers/bea-2026/figures/depparse_errors.svg"
+    alt="Russian sentence with dependency-tree-annotated error sites: amod, acl:relcl, obl."
+    number="Figure 1"
+    caption="Dependency-driven error generation. A Russian sentence with three rule-grounded error sites: the amod arc licenses an agreement error, the acl:relcl arc identifies a subordinate-clause boundary where a comma can be deleted, the obl arc identifies the noun whose case is governed by a verb. Synterr generates each error class from the syntactic structure that motivates it."
+  />
+
+  <Figure
+    src="/papers/bea-2026/figures/aggregate-vs-rule.svg"
+    alt="Aggregate F0.5 rises with model size while subordinate-clause comma accuracy collapses."
+    number="Figure 2"
+    caption="Aggregate F0.5 across model sizes (grey, top) rises smoothly with parameter count, while accuracy on the subordinate-clause comma rule (red, bottom) collapses to near-zero. The aggregate trend is what gets reported; the rule-level collapse is what models are silently learning. Schematic version; the full plot lives in the paper."
+  />
+
+  <p style="margin-top: 3rem; color: var(--muted); font-family: var(--font-sans); font-size: 0.9rem;">
+    More figures land here as we finalize the camera-ready visuals (suppression-by-rule fan,
+    confusion-matrix heatmaps for the four punctuation handlers, the 35-condition
+    F<sub>0.5</sub> matrix). Drop a PR or email if you want a higher-res variant.
+  </p>
+</BaseLayout>

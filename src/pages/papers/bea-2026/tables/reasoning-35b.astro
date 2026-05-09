@@ -1,0 +1,26 @@
+---
+import BaseLayout from "../../../../layouts/BaseLayout.astro";
+import ReasoningTable from "../../../../components/ReasoningTable.astro";
+---
+
+<BaseLayout
+  title="Reasoning chains: Qwen3.5-35B (think mode)"
+  description="612 reasoning chains from Qwen3.5-35B in think-mode on the LoRuGEC test set, rule-grouped and searchable."
+  wide={true}
+>
+  <p style="font-family: var(--font-sans); font-size: 0.9rem; margin: 0 0 0.5rem;">
+    <a href="/papers/bea-2026/">← BEA 2026 paper</a>
+  </p>
+
+  <h1>Reasoning chains: Qwen3.5-35B (think mode)</h1>
+
+  <p style="margin: 1rem 0 1.5rem; color: var(--ink-soft);">
+    Qwen3.5-35B in think mode, evaluated on all 612 LoRuGEC test items. The
+    larger sibling of the 9B view; useful for direct same-prompt comparison.
+  </p>
+
+  <ReasoningTable
+    src="/papers/bea-2026/qwen35_35b_think_lorugec_test.jsonl"
+    caption="Source: qwen35_35b_think_lorugec_test.jsonl (612 chains)"
+  />
+</BaseLayout>

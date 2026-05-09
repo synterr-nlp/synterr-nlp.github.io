@@ -1,0 +1,42 @@
+---
+import BaseLayout from "../../../../layouts/BaseLayout.astro";
+import XlsxView from "../../../../components/XlsxView.astro";
+---
+
+<BaseLayout
+  title="Evidence table (evidence_table.xlsx)"
+  description="213 Rozental sections × 4 corpora coverage with summary."
+  wide={true}
+>
+  <p style="font-family: var(--font-sans); font-size: 0.9rem; margin: 0 0 0.5rem;">
+    <a href="/papers/bea-2026/">← BEA 2026 paper</a>
+  </p>
+
+  <h1>Evidence table</h1>
+
+  <p style="margin: 1rem 0 1.5rem; color: var(--ink-soft);">
+    Per-§ coverage of Rozental's reference grammar across the four corpora.
+    Each sheet of the source xlsx is parsed live below with original cell
+    formatting preserved.
+  </p>
+
+  <h2>Summary</h2>
+  <XlsxView src="/papers/bea-2026/evidence_table.xlsx" sheet="Summary" />
+
+  <h2>Coverage</h2>
+  <XlsxView src="/papers/bea-2026/evidence_table.xlsx" sheet="Coverage" />
+
+  <h2>LoRuGEC</h2>
+  <XlsxView src="/papers/bea-2026/evidence_table.xlsx" sheet="LORUGEC" />
+
+  <h2>RULEC-GEC</h2>
+  <XlsxView src="/papers/bea-2026/evidence_table.xlsx" sheet="RULEC" />
+
+  <h2>GERA</h2>
+  <XlsxView src="/papers/bea-2026/evidence_table.xlsx" sheet="GERA" />
+
+  <details style="margin-top: 2rem;">
+    <summary style="cursor: pointer; font-family: var(--font-sans); color: var(--ink-soft);">Legend</summary>
+    <XlsxView src="/papers/bea-2026/evidence_table.xlsx" sheet="Legend" />
+  </details>
+</BaseLayout>

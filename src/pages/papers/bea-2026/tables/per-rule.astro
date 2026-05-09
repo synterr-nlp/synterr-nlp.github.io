@@ -1,0 +1,42 @@
+---
+import BaseLayout from "../../../../layouts/BaseLayout.astro";
+import DataTable from "../../../../components/DataTable.astro";
+---
+
+<BaseLayout
+  title="Per-rule LoRuGEC scores"
+  description="48 LoRuGEC rules × 35 model conditions: zero-shot, fine-tuned, continuation."
+  wide={true}
+>
+  <p style="font-family: var(--font-sans); font-size: 0.9rem; margin: 0 0 0.5rem;">
+    <a href="/papers/bea-2026/">← BEA 2026 paper</a>
+  </p>
+
+  <h1>Per-rule LoRuGEC scores</h1>
+
+  <p style="margin: 1rem 0 1.5rem; color: var(--ink-soft);">
+    The matrix behind the paper's headline finding: per-rule F<sub>0.5</sub>
+    across 35 model conditions (zero-shot, fine-tuned, continuation training).
+    Each row is one of the 48 LoRuGEC rules.
+  </p>
+
+  <DataTable
+    src="/papers/bea-2026/per_rule_lorugec.csv"
+    caption="Source: per_rule_lorugec.csv (48 × 36). Cells shaded by F0.5 value."
+    pageSize={50}
+    heatmap={true}
+  />
+
+  <h2 style="margin-top: 3rem;">Reasoning vs zero-shot</h2>
+  <p style="margin: 1rem 0 1.5rem; color: var(--ink-soft);">
+    Per-rule comparison of think-mode vs zero-shot for the Qwen models in the study,
+    added in the camera-ready (R1.Q2 reviewer response).
+  </p>
+
+  <DataTable
+    src="/papers/bea-2026/per_rule_thinking_vs_zs.csv"
+    caption="Source: per_rule_thinking_vs_zs.csv. Cells shaded by score."
+    pageSize={50}
+    heatmap={true}
+  />
+</BaseLayout>

@@ -1,0 +1,450 @@
+---
+/**
+ * Browsable CSV table that actually matches the site design.
+ *
+ * Pure HTML <table>, vanilla JS for sort + filter + pagination.
+ * Numeric columns auto-detected and rendered with optional heat shading.
+ *
+ * Usage:
+ *   <DataTable src="/path/to/file.csv" caption="..." />
+ */
+interface Props {
+  src: string;
+  caption?: string;
+  pageSize?: number;
+  /** Color numeric cells by value (0–100 range). Useful for F0.5 grids. */
+  heatmap?: boolean;
+}
+
+const { src, caption, pageSize = 50, heatmap = false } = Astro.props;
+const id = `dt-${Math.random().toString(36).slice(2, 9)}`;
+---
+
+<figure class="dt-wrap">
+  {caption && <figcaption class="dt-caption">{caption}</figcaption>}
+
+  <div class="dt-toolbar">
+    <input type="text" class="dt-filter" data-target={id} placeholder="filter…" />
+    <span class="dt-counts" data-target={id}>
+      <span class="dt-shown">0</span> / <span class="dt-total">0</span> rows
+    </span>
+    <a class="dt-download" href={src} download>download csv</a>
+  </div>
+
+  <div id={id} class="dt-scroll" data-src={src} data-page-size={pageSize} data-heatmap={heatmap ? "1" : "0"}>
+    <p class="dt-loading">loading…</p>
+  </div>
+
+  <div class="dt-pager" data-target={id} hidden>
+    <button class="dt-prev" type="button" disabled>prev</button>
+    <span class="dt-page-info"></span>
+    <button class="dt-next" type="button" disabled>next</button>
+  </div>
+</figure>
+
+<script is:inline define:vars={{ id }}>
+  (function () {
+    const root = document.getElementById(id);
+    if (!root) return;
+
+    const src = root.dataset.src;
+    const pageSize = parseInt(root.dataset.pageSize || "50", 10);
+    const useHeatmap = root.dataset.heatmap === "1";
+
+    const filterEl = document.querySelector(`.dt-filter[data-target="${id}"]`);
+    const countsEl = document.querySelector(`.dt-counts[data-target="${id}"]`);
+    const pagerEl = document.querySelector(`.dt-pager[data-target="${id}"]`);
+    const prevBtn = pagerEl.querySelector(".dt-prev");
+    const nextBtn = pagerEl.querySelector(".dt-next");
+    const pageInfo = pagerEl.querySelector(".dt-page-info");
+
+    let headers = [];
+    let rows = [];
+    let visible = [];
+    let sortKey = null;
+    let sortDir = 1;
+    let page = 0;
+    let numericCols = new Set();
+
+    function escapeHTML(s) {
+      return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    function attachColumnResize(table) {
+      if (!table) return;
+      let colgroup = table.querySelector("colgroup");
+      const headerRow = table.querySelector("thead tr") || table.querySelector("tr");
+      if (!headerRow) return;
+      const ths = Array.from(headerRow.children);
+      if (!colgroup) {
+        colgroup = document.createElement("colgroup");
+        for (let i = 0; i < ths.length; i++) colgroup.appendChild(document.createElement("col"));
+        table.insertBefore(colgroup, table.firstChild);
+      } else {
+        while (colgroup.children.length < ths.length) colgroup.appendChild(document.createElement("col"));
+      }
+      const cols = Array.from(colgroup.children);
+
+      let layoutLocked = false;
+      function lockLayout() {
+        if (layoutLocked) return;
+        const widths = ths.map((t) => t.getBoundingClientRect().width);
+        widths.forEach((w, i) => {
+          if (w > 0) cols[i].style.width = `${Math.round(w)}px`;
+        });
+        table.style.tableLayout = "fixed";
+        layoutLocked = true;
+      }
+
+      ths.forEach((th, i) => {
+        if (th.querySelector(".col-resize-handle")) return;
+        const handle = document.createElement("span");
+        handle.className = "col-resize-handle";
+        handle.setAttribute("role", "separator");
+        handle.setAttribute("aria-label", "Resize column");
+        th.appendChild(handle);
+
+        let startX = 0, startW = 0;
+        function onMove(e) {
+          const dx = e.clientX - startX;
+          cols[i].style.width = `${Math.max(40, startW + dx)}px`;
+        }
+        function onUp() {
+          document.removeEventListener("mousemove", onMove);
+          document.removeEventListener("mouseup", onUp);
+          document.body.style.cursor = "";
+          document.body.style.userSelect = "";
+        }
+        handle.addEventListener("mousedown", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          lockLayout();
+          startX = e.clientX;
+          startW = cols[i].getBoundingClientRect().width || th.getBoundingClientRect().width;
+          document.addEventListener("mousemove", onMove);
+          document.addEventListener("mouseup", onUp);
+          document.body.style.cursor = "col-resize";
+          document.body.style.userSelect = "none";
+        });
+        handle.addEventListener("dblclick", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          cols[i].style.width = "";
+        });
+      });
+    }
+
+    function parseCSV(text) {
+      const out = [];
+      let i = 0, cur = "", row = [], inQ = false;
+      while (i < text.length) {
+        const c = text[i];
+        if (inQ) {
+          if (c === '"' && text[i + 1] === '"') { cur += '"'; i += 2; continue; }
+          if (c === '"') { inQ = false; i++; continue; }
+          cur += c; i++; continue;
+        }
+        if (c === '"') { inQ = true; i++; continue; }
+        if (c === ',') { row.push(cur); cur = ""; i++; continue; }
+        if (c === '\n' || c === '\r') {
+          if (c === '\r' && text[i + 1] === '\n') i++;
+          row.push(cur); out.push(row); cur = ""; row = []; i++; continue;
+        }
+        cur += c; i++;
+      }
+      if (cur !== "" || row.length) { row.push(cur); out.push(row); }
+      return out.filter((r) => r.length > 0 && !(r.length === 1 && r[0] === ""));
+    }
+
+    function isNumeric(s) {
+      if (s === "" || s === null || s === undefined) return false;
+      return !isNaN(parseFloat(s)) && isFinite(s);
+    }
+
+    function detectNumeric(headers, rows) {
+      const cols = new Set();
+      for (let c = 0; c < headers.length; c++) {
+        let numCount = 0, total = 0;
+        for (const r of rows) {
+          if (r[c] === undefined || r[c] === "") continue;
+          total++;
+          if (isNumeric(r[c])) numCount++;
+        }
+        if (total > 0 && numCount / total > 0.7) cols.add(c);
+      }
+      return cols;
+    }
+
+    function applySort() {
+      if (sortKey === null) return;
+      const k = sortKey;
+      const num = numericCols.has(k);
+      visible.sort((a, b) => {
+        const av = a[k] ?? "";
+        const bv = b[k] ?? "";
+        if (num) return (parseFloat(av) - parseFloat(bv)) * sortDir;
+        return String(av).localeCompare(String(bv), "ru") * sortDir;
+      });
+    }
+
+    function applyFilter() {
+      const q = (filterEl.value || "").toLowerCase().trim();
+      if (!q) {
+        visible = rows.slice();
+      } else {
+        visible = rows.filter((r) =>
+          r.some((cell) => String(cell).toLowerCase().includes(q))
+        );
+      }
+      page = 0;
+      applySort();
+      render();
+    }
+
+    function heatColor(v) {
+      // 0 -> muted neutral, 100 -> accent.
+      const n = Math.max(0, Math.min(100, parseFloat(v) || 0));
+      const t = n / 100;
+      // alpha overlay; works in both themes via mix-blend-mode-friendly rgba
+      return `rgba(179, 38, 30, ${0.05 + t * 0.4})`;
+    }
+
+    function render() {
+      const start = page * pageSize;
+      const end = Math.min(start + pageSize, visible.length);
+      const pageRows = visible.slice(start, end);
+
+      const thead = "<thead><tr>" + headers.map((h, i) => {
+        const ind = sortKey === i ? (sortDir === 1 ? " ↑" : " ↓") : "";
+        const cls = "dt-th" + (numericCols.has(i) ? " dt-num" : "");
+        return `<th class="${cls}" data-col="${i}">${escapeHTML(h)}<span class="dt-sort">${ind}</span></th>`;
+      }).join("") + "</tr></thead>";
+
+      const tbody = "<tbody>" + pageRows.map((r) =>
+        "<tr>" + headers.map((_h, i) => {
+          const v = r[i] ?? "";
+          const cls = numericCols.has(i) ? "dt-num" : "";
+          if (useHeatmap && numericCols.has(i) && v !== "" && isNumeric(v)) {
+            const bg = heatColor(v);
+            return `<td class="${cls}" style="background:${bg};">${escapeHTML(v)}</td>`;
+          }
+          return `<td class="${cls}">${escapeHTML(v)}</td>`;
+        }).join("") + "</tr>"
+      ).join("") + "</tbody>";
+
+      root.innerHTML = `<table class="dt-table">${thead}${tbody}</table>`;
+
+      attachColumnResize(root.querySelector("table"));
+
+      // Wire header clicks
+      root.querySelectorAll(".dt-th").forEach((th) => {
+        th.addEventListener("click", () => {
+          const col = parseInt(th.dataset.col, 10);
+          if (sortKey === col) sortDir = -sortDir;
+          else { sortKey = col; sortDir = 1; }
+          applySort();
+          render();
+        });
+      });
+
+      // Counts and pager
+      countsEl.querySelector(".dt-shown").textContent = visible.length;
+      countsEl.querySelector(".dt-total").textContent = rows.length;
+
+      const pages = Math.max(1, Math.ceil(visible.length / pageSize));
+      if (pages <= 1) {
+        pagerEl.hidden = true;
+      } else {
+        pagerEl.hidden = false;
+        pageInfo.textContent = `page ${page + 1} of ${pages}`;
+        prevBtn.disabled = page === 0;
+        nextBtn.disabled = page >= pages - 1;
+      }
+    }
+
+    prevBtn.addEventListener("click", () => { if (page > 0) { page--; render(); } });
+    nextBtn.addEventListener("click", () => {
+      const pages = Math.ceil(visible.length / pageSize);
+      if (page < pages - 1) { page++; render(); }
+    });
+
+    let filterTimer;
+    filterEl.addEventListener("input", () => {
+      clearTimeout(filterTimer);
+      filterTimer = setTimeout(applyFilter, 150);
+    });
+
+    fetch(src)
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.text();
+      })
+      .then((text) => {
+        const parsed = parseCSV(text);
+        if (parsed.length === 0) {
+          root.innerHTML = `<p class="dt-empty">no rows</p>`;
+          return;
+        }
+        headers = parsed[0];
+        rows = parsed.slice(1);
+        numericCols = detectNumeric(headers, rows);
+        visible = rows.slice();
+        render();
+      })
+      .catch((err) => {
+        root.innerHTML = `<p class="dt-error">Failed to load ${src}<br><small>${err.message}</small></p>`;
+      });
+  })();
+</script>
+
+<style is:inline>
+  .dt-wrap { margin: 2rem 0; }
+  .dt-caption {
+    font-family: var(--font-sans);
+    font-size: 0.88rem;
+    color: var(--muted);
+    margin: 0 0 0.5rem;
+  }
+
+  .dt-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+    font-family: var(--font-sans);
+    font-size: 0.88rem;
+  }
+  .dt-filter {
+    flex: 1;
+    max-width: 28rem;
+    padding: 0.45rem 0.7rem;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 0.9rem;
+    font-family: var(--font-sans);
+  }
+  .dt-filter:focus { outline: none; border-color: var(--accent); }
+  .dt-counts {
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    white-space: nowrap;
+  }
+  .dt-download {
+    color: var(--ink-soft);
+    border-bottom: none;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+  }
+  .dt-download:hover { color: var(--accent); }
+
+  .dt-scroll {
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    overflow: auto;
+    max-height: 75vh;
+    background: var(--bg);
+  }
+  .dt-loading, .dt-empty, .dt-error {
+    padding: 1.25rem;
+    color: var(--muted);
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+  }
+  .dt-error { color: var(--accent); }
+
+  .dt-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-sans);
+    font-size: 0.88rem;
+    color: var(--ink);
+  }
+
+  .dt-table thead {
+    position: sticky;
+    top: 0;
+    background: var(--bg-soft);
+    z-index: 1;
+  }
+  .dt-th {
+    position: relative;       /* containing block for the resize handle */
+    text-align: left;
+    padding: 0.55rem 0.75rem;
+    font-weight: 600;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+    border-bottom: 1px solid var(--rule);
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    background: var(--bg-soft);
+  }
+  .dt-th:hover { color: var(--accent); }
+  .dt-th.dt-num { text-align: right; }
+  .dt-sort {
+    display: inline-block;
+    color: var(--accent);
+    font-weight: 700;
+    margin-left: 0.2rem;
+    width: 1ch;
+  }
+
+  .dt-table tbody tr {
+    border-bottom: 1px solid var(--rule);
+  }
+  .dt-table tbody tr:last-child { border-bottom: none; }
+  .dt-table tbody tr:hover {
+    background: var(--bg-soft);
+  }
+
+  .dt-table td {
+    padding: 0.5rem 0.75rem;
+    vertical-align: top;
+    line-height: 1.45;
+  }
+  .dt-table td.dt-num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--ink);
+  }
+
+  .dt-pager {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 0.75rem;
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+  }
+  .dt-pager button {
+    padding: 0.3rem 0.7rem;
+    background: var(--bg);
+    color: var(--ink-soft);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+  }
+  .dt-pager button:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .dt-pager button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .dt-page-info {
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+  }
+</style>
