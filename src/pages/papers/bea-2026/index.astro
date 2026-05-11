@@ -153,6 +153,9 @@ import Figure from "../../../components/Figure.astro";
 
   <section style="margin: 3rem 0;">
     <h2>Cite</h2>
+    <p style="margin: 0 0 1rem; font-size: 0.95rem;">
+      Paper:
+    </p>
     <pre><code>{`@inproceedings{smirnova2026aggregate,
   title     = {What Aggregate Scores Hide: Per-Rule Evaluation of Russian Grammatical Error Correction},
   author    = {Smirnova, Anna and Kopan, Artyom and Makeev, Vladislav and Chernishev, George},
@@ -160,5 +163,21 @@ import Figure from "../../../components/Figure.astro";
   year      = {2026},
   url       = {https://synterr-nlp.github.io/papers/bea-2026/},
 }`}</code></pre>
+    <p style="margin: 1.5rem 0 1rem; font-size: 0.95rem;">
+      Software release:
+    </p>
+    <pre><code>{`@software{synterr_2026,
+  title   = {synterr: rule-grounded synthetic error generation for Russian GEC},
+  author  = {Smirnova, Anna and Kopan, Artyom and Makeev, Vladislav and Chernishev, George},
+  year    = {2026},
+  version = {v1.0.0},
+  doi     = {10.5281/zenodo.20121524},
+  url     = {https://github.com/synterr-nlp/synterr},
+}`}</code></pre>
+    <p style="margin: 1rem 0 0; font-size: 0.9rem;">
+      <a href="https://doi.org/10.5281/zenodo.20121524" rel="external">
+        <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.20121524.svg" alt="Zenodo DOI badge" style="vertical-align: middle;" />
+      </a>
+    </p>
   </section>
 </BaseLayout>
