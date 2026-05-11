@@ -94,6 +94,42 @@ import Figure from "../../../components/Figure.astro";
   </section>
 
   <section style="margin: 3rem 0;">
+    <h2>Training data &amp; reproducibility</h2>
+    <p style="margin: 0.5rem 0 1rem; color: var(--ink-soft);">
+      v4 SFT data is pinned to a specific generation commit and SHA-256
+      byte-verified against the file the paper's models trained on. Run
+      <code style="font-family: var(--font-mono); font-size: 0.85rem;">scripts/verify_v4.py</code>
+      after cloning to confirm.
+    </p>
+    <ul class="artifact-list">
+      <li>
+        <span class="artifact-name">v4 SFT training data (39,209 examples, 21 MB)</span>
+        <span class="artifact-link"><a href="https://github.com/synterr-nlp/synterr/blob/master/data/qwen_sft_v4.jsonl" rel="external">qwen_sft_v4.jsonl</a></span>
+      </li>
+      <li>
+        <span class="artifact-name">Source-mix corpus (150K sentences, 30 MB)</span>
+        <span class="artifact-link"><a href="https://github.com/synterr-nlp/synterr/blob/master/data/mixed_sources_v4.txt" rel="external">mixed_sources_v4.txt</a></span>
+      </li>
+      <li>
+        <span class="artifact-name">Full pipeline documentation</span>
+        <span class="artifact-link"><a href="https://github.com/synterr-nlp/synterr/blob/master/data/V4_DATA_PROVENANCE.md" rel="external">V4_DATA_PROVENANCE.md</a></span>
+      </li>
+      <li>
+        <span class="artifact-name">SHA-256 checksums (all v4 artifacts)</span>
+        <span class="artifact-link"><a href="https://github.com/synterr-nlp/synterr/blob/master/data/v4_checksums.txt" rel="external">v4_checksums.txt</a></span>
+      </li>
+      <li>
+        <span class="artifact-name">Verifier script</span>
+        <span class="artifact-link"><a href="https://github.com/synterr-nlp/synterr/blob/master/scripts/verify_v4.py" rel="external">verify_v4.py</a></span>
+      </li>
+      <li>
+        <span class="artifact-name">Per-rule generation distribution</span>
+        <span class="artifact-link"><a href="https://github.com/synterr-nlp/synterr/blob/master/data/qwen_sft_v4.dist.json" rel="external">qwen_sft_v4.dist.json</a></span>
+      </li>
+    </ul>
+  </section>
+
+  <section style="margin: 3rem 0;">
     <h2>Download</h2>
     <ul class="artifact-list">
       <li>
