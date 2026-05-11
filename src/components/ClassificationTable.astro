@@ -1,0 +1,370 @@
+---
+/**
+ * Browsable viewer for classified_gera.jsonl: one row per record, each
+ * showing the (source sentence, original→correction) error and the
+ * (corpus_tag → l2_tag) reclassification, expandable to the LLM reason.
+ *
+ * Two filter dropdowns (corpus_tag, l2_tag), confidence chip filter,
+ * free-text search across reason and sentence.
+ */
+interface Props {
+  src: string;
+  caption?: string;
+}
+
+const { src, caption } = Astro.props;
+const id = `ct-${Math.random().toString(36).slice(2, 9)}`;
+---
+
+<figure class="ct-wrap">
+  {caption && <figcaption class="ct-caption">{caption}</figcaption>}
+
+  <div class="ct-toolbar">
+    <select class="ct-corpus" data-target={id} aria-label="Filter by corpus tag">
+      <option value="">all corpus tags</option>
+    </select>
+    <select class="ct-l2" data-target={id} aria-label="Filter by Rozental L2 tag">
+      <option value="">all L2 tags</option>
+    </select>
+    <select class="ct-conf" data-target={id} aria-label="Filter by confidence">
+      <option value="">any confidence</option>
+      <option value="HIGH">HIGH only</option>
+      <option value="MEDIUM">MEDIUM only</option>
+      <option value="LOW">LOW only</option>
+    </select>
+    <input type="text" class="ct-search" data-target={id} placeholder="search sentence / reason…" />
+  </div>
+
+  <div class="ct-stats" data-target={id}>
+    <span class="ct-shown">0</span> / <span class="ct-total">0</span> records
+    &nbsp;·&nbsp;
+    <a class="ct-download" href={src} download>download jsonl</a>
+  </div>
+
+  <div id={id} class="ct-table" data-src={src}>
+    <p class="ct-loading">loading classification records…</p>
+  </div>
+</figure>
+
+<script is:inline define:vars={{ id }}>
+  (function () {
+    const root = document.getElementById(id);
+    if (!root) return;
+    const src = root.dataset.src;
+    const corpusSel = document.querySelector(`.ct-corpus[data-target="${id}"]`);
+    const l2Sel = document.querySelector(`.ct-l2[data-target="${id}"]`);
+    const confSel = document.querySelector(`.ct-conf[data-target="${id}"]`);
+    const searchInput = document.querySelector(`.ct-search[data-target="${id}"]`);
+    const statsEl = document.querySelector(`.ct-stats[data-target="${id}"]`);
+
+    function escapeHTML(s) {
+      return String(s ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\n/g, "<br>");
+    }
+
+    function highlightSpan(src, original) {
+      if (!src || !original) return escapeHTML(src);
+      const idx = src.indexOf(original);
+      if (idx < 0) return escapeHTML(src);
+      return (
+        escapeHTML(src.slice(0, idx)) +
+        `<mark>${escapeHTML(original)}</mark>` +
+        escapeHTML(src.slice(idx + original.length))
+      );
+    }
+
+    fetch(src)
+      .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.text(); })
+      .then((text) => {
+        const records = text.split("\n").filter(Boolean).map((l) => {
+          try { return JSON.parse(l); } catch { return null; }
+        }).filter(Boolean);
+
+        // Populate dropdowns
+        const corpusTags = [...new Set(records.map((r) => r.corpus_tag).filter(Boolean))].sort();
+        const l2Tags = [...new Set(records.map((r) => r.l2_tag).filter(Boolean))].sort();
+        for (const t of corpusTags) {
+          const o = document.createElement("option"); o.value = t; o.textContent = t; corpusSel.appendChild(o);
+        }
+        for (const t of l2Tags) {
+          const o = document.createElement("option"); o.value = t; o.textContent = t; l2Sel.appendChild(o);
+        }
+
+        function render(filtered) {
+          // Virtualization-lite: render first 200, append on scroll
+          const RENDER_LIMIT = 200;
+          const slice = filtered.slice(0, RENDER_LIMIT);
+          const html = slice.map((r) => {
+            const conf = r.confidence || "?";
+            const confClass = conf === "HIGH" ? "ok" : conf === "MEDIUM" ? "mid" : "low";
+            return `
+              <details class="ct-row">
+                <summary>
+                  <div class="ct-meta">
+                    <span class="ct-id">${escapeHTML(r.sentence_id ?? "?")}</span>
+                    <span class="ct-tags">
+                      <span class="ct-tag ct-tag-corpus">${escapeHTML(r.corpus_tag ?? "—")}</span>
+                      <span class="ct-arrow">→</span>
+                      <span class="ct-tag ct-tag-l2">${escapeHTML(r.l2_tag ?? "—")}</span>
+                    </span>
+                    <span class="ct-conf-pill ${confClass}">${escapeHTML(conf)}</span>
+                  </div>
+                  <div class="ct-pair">
+                    <span class="ct-original">${escapeHTML(r.original ?? "")}</span>
+                    <span class="ct-arrow ct-arrow-soft">→</span>
+                    <span class="ct-correction">${escapeHTML(r.correction ?? "")}</span>
+                  </div>
+                  <div class="ct-sentence">${highlightSpan(r.src, r.original)}</div>
+                </summary>
+                <div class="ct-detail">
+                  <table class="ct-fields">
+                    <tr><th>§</th><td>${escapeHTML(r.para ?? "—")}</td></tr>
+                    <tr><th>L1 tag</th><td>${escapeHTML(r.l1_tag ?? "—")}</td></tr>
+                    <tr><th>method</th><td>${escapeHTML(r.method ?? "—")}</td></tr>
+                    <tr><th>candidates</th><td>${escapeHTML((r.presort_candidates || []).join(", "))}</td></tr>
+                    <tr><th>presort</th><td>${escapeHTML(r.presort_reason ?? "—")}</td></tr>
+                  </table>
+                  <h4>reasoning</h4>
+                  <p class="ct-reason">${escapeHTML(r.llm_reason ?? "(no reason recorded)")}</p>
+                </div>
+              </details>
+            `;
+          }).join("");
+          const more = filtered.length > RENDER_LIMIT
+            ? `<p class="ct-more">${filtered.length - RENDER_LIMIT} more records match — narrow filters or use the search box.</p>`
+            : "";
+          root.innerHTML = html + more;
+          statsEl.querySelector(".ct-shown").textContent = filtered.length;
+        }
+
+        function applyFilters() {
+          const corpus = corpusSel.value;
+          const l2 = l2Sel.value;
+          const conf = confSel.value;
+          const q = (searchInput.value || "").toLowerCase().trim();
+          let out = records;
+          if (corpus) out = out.filter((r) => r.corpus_tag === corpus);
+          if (l2) out = out.filter((r) => r.l2_tag === l2);
+          if (conf) out = out.filter((r) => r.confidence === conf);
+          if (q) out = out.filter((r) => {
+            const blob = `${r.src || ""} ${r.llm_reason || ""} ${r.original || ""} ${r.correction || ""}`.toLowerCase();
+            return blob.includes(q);
+          });
+          render(out);
+        }
+
+        statsEl.querySelector(".ct-total").textContent = records.length;
+        render(records);
+
+        [corpusSel, l2Sel, confSel].forEach((el) => el.addEventListener("change", applyFilters));
+        let t;
+        searchInput.addEventListener("input", () => { clearTimeout(t); t = setTimeout(applyFilters, 150); });
+      })
+      .catch((err) => {
+        root.innerHTML = `<p class="ct-error">Failed to load ${src}: ${err.message}</p>`;
+      });
+  })();
+</script>
+
+<style is:inline>
+  .ct-wrap { margin: 2rem 0; }
+  .ct-caption {
+    font-family: var(--font-sans);
+    font-size: 0.88rem;
+    color: var(--muted);
+    margin: 0 0 0.5rem;
+  }
+  .ct-toolbar {
+    display: grid;
+    grid-template-columns: 1fr 1fr 8rem 1fr;
+    gap: 0.6rem;
+    margin-bottom: 0.5rem;
+  }
+  .ct-toolbar select, .ct-toolbar input {
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 0.88rem;
+  }
+  .ct-toolbar select:focus, .ct-toolbar input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .ct-stats {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-bottom: 0.75rem;
+  }
+  .ct-download {
+    color: var(--ink-soft);
+    border-bottom: none;
+  }
+  .ct-download:hover { color: var(--accent); }
+
+  .ct-table { border-top: 1px solid var(--rule); }
+  .ct-loading, .ct-error, .ct-more {
+    padding: 1rem;
+    color: var(--muted);
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+  }
+  .ct-error { color: var(--accent); }
+  .ct-more {
+    border-top: 1px dashed var(--rule);
+    text-align: center;
+    margin: 0;
+  }
+
+  .ct-row { border-bottom: 1px solid var(--rule); }
+  .ct-row > summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 0.75rem 1rem 0.75rem 2.2rem;
+    position: relative;
+  }
+  .ct-row > summary::-webkit-details-marker { display: none; }
+  .ct-row > summary::before {
+    content: "▸";
+    color: var(--muted);
+    position: absolute;
+    left: 0.8rem;
+    top: 0.9rem;
+    transition: transform 0.15s;
+    font-size: 0.8rem;
+  }
+  .ct-row[open] > summary::before { transform: rotate(90deg); }
+  .ct-row:hover > summary { background: var(--bg-soft); }
+
+  .ct-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.8rem;
+    align-items: center;
+    font-family: var(--font-sans);
+    font-size: 0.78rem;
+    margin-bottom: 0.35rem;
+  }
+  .ct-id {
+    font-family: var(--font-mono);
+    color: var(--muted);
+  }
+  .ct-tags {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+  .ct-tag {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    padding: 0.05rem 0.45rem;
+    border-radius: 3px;
+    background: var(--bg-soft);
+    color: var(--ink-soft);
+  }
+  .ct-tag-l2 {
+    color: var(--accent);
+    background: rgba(179, 38, 30, 0.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    .ct-tag-l2 { background: rgba(232, 124, 117, 0.12); }
+  }
+  .ct-conf-pill {
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
+    font-weight: 500;
+    padding: 0.05rem 0.45rem;
+    border-radius: 3px;
+    letter-spacing: 0.03em;
+  }
+  .ct-conf-pill.ok    { color: #2d7a3a; background: rgba(45, 122, 58, 0.1); }
+  .ct-conf-pill.mid   { color: #ad7b1c; background: rgba(173, 123, 28, 0.12); }
+  .ct-conf-pill.low   { color: var(--accent); background: rgba(179, 38, 30, 0.1); }
+  @media (prefers-color-scheme: dark) {
+    .ct-conf-pill.ok  { color: #6ec27c; background: rgba(110, 194, 124, 0.12); }
+    .ct-conf-pill.mid { color: #d6a86b; background: rgba(214, 168, 107, 0.14); }
+  }
+
+  .ct-arrow { color: var(--muted); margin: 0 0.25rem; font-family: var(--font-sans); }
+  .ct-arrow-soft { color: var(--muted); margin: 0 0.5rem; }
+
+  .ct-pair {
+    font-family: var(--font-serif);
+    font-size: 0.95rem;
+    margin: 0.25rem 0 0.35rem;
+  }
+  .ct-original {
+    color: var(--accent);
+    text-decoration: line-through;
+    text-decoration-color: var(--muted);
+  }
+  .ct-correction {
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .ct-sentence {
+    font-family: var(--font-serif);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--ink-soft);
+  }
+  .ct-sentence mark {
+    background: rgba(179, 38, 30, 0.18);
+    color: var(--ink);
+    padding: 0 2px;
+    border-radius: 2px;
+  }
+
+  .ct-detail {
+    padding: 0.5rem 1rem 1.25rem 2.2rem;
+    background: var(--bg-soft);
+    border-top: 1px solid var(--rule);
+  }
+  .ct-fields {
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+  }
+  .ct-fields th {
+    text-align: left;
+    color: var(--muted);
+    font-family: var(--font-sans);
+    font-weight: 500;
+    padding: 0.18rem 1rem 0.18rem 0;
+    vertical-align: top;
+    width: 7rem;
+  }
+  .ct-fields td {
+    padding: 0.18rem 0;
+    color: var(--ink);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+  }
+  .ct-detail h4 {
+    font-family: var(--font-sans);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin: 0.75rem 0 0.4rem;
+    font-weight: 600;
+  }
+  .ct-reason {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 0.95rem;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+
+  @media (max-width: 700px) {
+    .ct-toolbar { grid-template-columns: 1fr; }
+  }
+</style>

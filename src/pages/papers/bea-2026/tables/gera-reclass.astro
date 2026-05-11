@@ -1,0 +1,29 @@
+---
+import BaseLayout from "../../../../layouts/BaseLayout.astro";
+import ClassificationTable from "../../../../components/ClassificationTable.astro";
+---
+
+<BaseLayout
+  title="GERA reclassification"
+  description="5,988 GERA errors reclassified into Rozental's taxonomy, with the LLM's reasoning per record."
+  wide={true}
+>
+  <p style="font-family: var(--font-sans); font-size: 0.9rem; margin: 0 0 0.5rem;">
+    <a href="/papers/bea-2026/">← BEA 2026 paper</a>
+  </p>
+
+  <h1>GERA reclassification</h1>
+
+  <p style="margin: 1rem 0 1.5rem; color: var(--ink-soft);">
+    Each row is one GERA error mapped from the corpus's POS-based tag into a
+    fine-grained Rozental L2 tag, with the candidate set considered and the
+    LLM's reasoning. The full distribution from the paper's <em>gera-reclass</em>
+    table. Filter by either tag set, restrict to confidence level, or search
+    the reasoning text.
+  </p>
+
+  <ClassificationTable
+    src="/papers/bea-2026/classified_gera.jsonl"
+    caption="Source: classified_gera.jsonl (5,988 records)"
+  />
+</BaseLayout>
