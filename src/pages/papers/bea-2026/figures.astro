@@ -26,10 +26,30 @@ import Figure from "../../../components/Figure.astro";
     caption="Dependency-driven error generation. A Russian sentence with three rule-grounded error sites: the amod arc licenses an agreement error, the acl:relcl arc identifies a subordinate-clause boundary where a comma can be deleted, the obl arc identifies the noun whose case is governed by a verb. Synterr generates each error class from the syntactic structure that motivates it."
   />
 
+  <figure class="pipeline-figure">
+    <iframe
+      src="/papers/bea-2026/figures/pipeline.html"
+      title="SyntErr rule-application pipeline diagram"
+      loading="lazy"
+    ></iframe>
+    <figcaption>
+      <span class="fig-number">Figure 2.</span>
+      <span class="fig-caption">
+        The SyntErr rule-application pipeline. Source text flows through
+        analysis (tokenization, morphology, dependency parsing) into the
+        rule applier, which samples a handler from the configured
+        per-rule distribution, gates on each handler's syntactic
+        preconditions, and emits a corrupted sentence tagged with its
+        Rozental §. Configuration governs the entire path.
+        <a href="/papers/bea-2026/figures/pipeline.html" target="_blank" rel="noopener">Open full size</a>.
+      </span>
+    </figcaption>
+  </figure>
+
   <Figure
     src="/papers/bea-2026/figures/aggregate-vs-rule.svg"
     alt="Aggregate F0.5 rises with model size while subordinate-clause comma accuracy collapses."
-    number="Figure 2"
+    number="Figure 3"
     caption="Aggregate F0.5 across model sizes (grey, top) rises smoothly with parameter count, while accuracy on the subordinate-clause comma rule (red, bottom) collapses to near-zero. The aggregate trend is what gets reported; the rule-level collapse is what models are silently learning. Schematic version; the full plot lives in the paper."
   />
 
@@ -39,3 +59,35 @@ import Figure from "../../../components/Figure.astro";
     F<sub>0.5</sub> matrix). Drop a PR or email if you want a higher-res variant.
   </p>
 </BaseLayout>
+
+<style>
+  .pipeline-figure {
+    margin: 2.5rem 0;
+    text-align: center;
+  }
+  .pipeline-figure iframe {
+    width: 100%;
+    /* A4 landscape aspect: 1123x794 ≈ 1.414 ratio */
+    aspect-ratio: 1123 / 794;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: #fbfaf7;
+    display: block;
+  }
+  .pipeline-figure figcaption {
+    margin-top: 0.75rem;
+    font-family: var(--font-sans);
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    text-align: left;
+    max-width: 44rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .pipeline-figure .fig-number {
+    color: var(--muted);
+    font-weight: 600;
+    margin-right: 0.4rem;
+  }
+</style>
