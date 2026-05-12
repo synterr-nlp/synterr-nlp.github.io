@@ -10,7 +10,10 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   <!-- Hero ------------------------------------------------------------ -->
   <section class="hero">
     <div class="hero-text">
-      <h1>Russian grammatical error correction, evaluated honestly.</h1>
+      <h1>Grammatical error correction, evaluated honestly.</h1>
+      <p class="subtitle">
+        Currently focused on Russian.
+      </p>
       <p class="lede">
         Most GEC benchmarks summarize heterogeneous behavior into one F-score
         and miss the parts where models silently regress. We build the
@@ -131,8 +134,15 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   .hero h1 {
     font-size: 2.4rem;
     line-height: 1.1;
-    margin: 0 0 1rem;
+    margin: 0 0 0.5rem;
     letter-spacing: -0.015em;
+  }
+  .hero .subtitle {
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    color: var(--muted);
+    margin: 0 0 1.25rem;
+    letter-spacing: 0.01em;
   }
   .hero .lede {
     font-size: 1.1rem;
