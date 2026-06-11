@@ -7,96 +7,124 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   description="Open Russian grammatical error correction. Rule-grounded synthetic data, per-rule diagnostics, reproducible pipelines."
   wide={true}
 >
-  <!-- Hero ------------------------------------------------------------ -->
+  <!-- Hero: the product demonstrates itself before any claim ----------- -->
   <section class="hero">
-    <div class="hero-text">
-      <h1>Grammatical error correction, evaluated honestly.</h1>
-      <p class="subtitle">
-        Currently focused on Russian.
+    <h1>Grammatical error correction,<br />evaluated honestly.</h1>
+    <p class="lede">
+      Most GEC benchmarks summarize heterogeneous behavior into one F-score
+      and miss the parts where models silently regress. We build the
+      rule-grounded synthetic data and per-rule diagnostics that surface
+      what aggregate metrics hide. Currently focused on Russian.
+    </p>
+
+    <figure class="specimen-fig">
+      <p class="specimen" lang="ru">
+        Мы гуляли в&nbsp;<span class="edit"><del>лесе</del><ins>лесу</ins></span>&nbsp;весь день.
       </p>
-      <p class="lede">
-        Most GEC benchmarks summarize heterogeneous behavior into one F-score
-        and miss the parts where models silently regress. We build the
-        rule-grounded synthetic data and per-rule diagnostics that surface
-        what aggregate metrics hide.
-      </p>
-      <div class="hero-cta">
-        <a class="btn-primary" href="/papers/bea-2026/overview/">Read the BEA 2026 overview</a>
-        <a class="btn-secondary" href="https://github.com/synterr-nlp/synterr" rel="external">Code on GitHub</a>
-      </div>
-    </div>
-    <figure class="hero-fig">
-      <img src="/papers/bea-2026/figures/depparse_errors.svg"
-           alt="A Russian sentence with three rule-grounded error sites annotated on its dependency tree." />
-      <figcaption>
-        Three rule-grounded error sites on one sentence: agreement
-        (<code>amod</code>), subordinate-clause boundary (<code>acl:relcl</code>),
-        case government (<code>obl</code>).
+      <figcaption class="specimen-caption">
+        Real output: synterr corrupts clean text into a second-locative error
+        and labels it — <span class="tag">noun_case_prep_e_u</span>
+        <span class="para-ref">§152</span> — one of 75&nbsp;error types placed
+        by the dependency tree, not by chance.
       </figcaption>
     </figure>
+
+    <div class="hero-cta">
+      <a class="btn-primary" href="/papers/bea-2026/overview/">Read the BEA 2026 overview</a>
+      <a class="cta-link" href="https://github.com/synterr-nlp/synterr" rel="external">Code on GitHub</a>
+    </div>
   </section>
 
-  <!-- Featured paper -------------------------------------------------- -->
-  <section class="featured">
-    <div class="kicker">Featured · accepted at ACL BEA 2026</div>
-    <h2 class="featured-title">What Aggregate Scores Hide</h2>
-    <p class="featured-blurb">
+  <!-- Featured paper: the one red band --------------------------------- -->
+  <section class="band">
+    <p class="band-kicker">Accepted at ACL BEA 2026</p>
+    <h2 class="band-title">What Aggregate Scores Hide</h2>
+    <p class="band-blurb">
       Across eight open models from 0.8B to 12B parameters, fine-tuning on
-      synthetic data raises overall F<sub>0.5</sub> on LoRuGEC, but drives
-      subordinate-clause comma accuracy from 14% to 1%. Aggregate scores
-      can't detect this; per-rule diagnostics can. Once detected, it's
-      fixable.
+      synthetic data <em>raises</em> overall F<sub>0.5</sub> on LoRuGEC —
+      while driving subordinate-clause comma accuracy from
+      <strong>14% to 1%</strong>. Aggregate scores can't detect this;
+      per-rule diagnostics can. Once detected, it's fixable.
     </p>
-    <ul class="featured-links">
-      <li><a href="/papers/bea-2026/overview/">Graphical overview</a></li>
-      <li><a href="/papers/bea-2026/">Paper landing</a></li>
-      <li><a href="/papers/bea-2026/tables/per-rule/">Per-rule data</a></li>
-      <li><a href="/papers/bea-2026/tables/reasoning-9b/">Reasoning chains</a></li>
-    </ul>
+    <p class="band-links">
+      <a href="/papers/bea-2026/overview/">graphical overview</a>
+      <a href="/papers/bea-2026/">paper landing</a>
+      <a href="/papers/bea-2026/tables/per-rule/">per-rule data</a>
+      <a href="/papers/bea-2026/tables/reasoning-9b/">reasoning chains</a>
+    </p>
   </section>
 
-  <!-- What we do ------------------------------------------------------ -->
-  <section class="threecol">
-    <article>
-      <h3>Synterr</h3>
-      <p>
-        An open-source synthetic-error generator for Russian.
-        Configurable per-rule rates, dependency-tree-grounded handlers,
-        a 98-category taxonomy from Rozental's reference grammar.
-      </p>
-      <p class="link">
-        <a href="/synterr/">Read the docs</a>
-        &nbsp;·&nbsp;
-        <a href="https://github.com/synterr-nlp/synterr" rel="external">GitHub</a>
-      </p>
+  <!-- The ledger: what we make, cited like Rozental cites rules -------- -->
+  <section class="ledger">
+    <article class="entry">
+      <div class="entry-ref"><span class="para-ref">§ 1</span></div>
+      <div class="entry-body">
+        <h3>Synterr, the generator</h3>
+        <p>
+          An open-source synthetic-error generator for Russian: 28 handlers,
+          75 error types, each grounded in the dependency tree and mapped to
+          a 100-category taxonomy from Rozental's reference grammar. Errors
+          carry their rule — filter, re-weight, and audit by it.
+        </p>
+        <p class="entry-links">
+          <a href="/synterr/">docs</a> · <a href="https://github.com/synterr-nlp/synterr" rel="external">github</a>
+        </p>
+      </div>
     </article>
-    <article>
-      <h3>Per-rule diagnostics</h3>
-      <p>
-        Browsable taxonomy and per-rule scores for evaluating Russian GEC
-        systems honestly. Cell-coloured xlsx parsed natively in your
-        browser. Sortable, filterable, downloadable.
-      </p>
-      <p class="link">
-        <a href="/papers/bea-2026/tables/cross-reference/">Browse the taxonomy</a>
-      </p>
+
+    <article class="entry">
+      <div class="entry-ref"><span class="para-ref">§ 2</span></div>
+      <div class="entry-body">
+        <h3>Per-rule diagnostics</h3>
+        <p>
+          A browsable taxonomy and per-rule scores for evaluating Russian
+          GEC systems honestly. Cell-coloured xlsx parsed natively in your
+          browser — sortable, filterable, downloadable.
+        </p>
+        <p class="entry-links">
+          <a href="/papers/bea-2026/tables/cross-reference/">browse the taxonomy</a>
+        </p>
+      </div>
     </article>
-    <article>
-      <h3>Reproducible pipelines</h3>
-      <p>
-        Every released dataset comes with pinned generation commit, SHA-256
-        checksums, and a verifier script. v4 SFT data is byte-verified
-        against the file the paper trained on.
-      </p>
-      <p class="link">
-        <a href="https://github.com/synterr-nlp/synterr/blob/master/data/V4_DATA_PROVENANCE.md" rel="external">v4 provenance</a>
-      </p>
+
+    <article class="entry">
+      <div class="entry-ref"><span class="para-ref">§ 3</span></div>
+      <div class="entry-body">
+        <h3>Reproducible pipelines</h3>
+        <p>
+          Every released dataset ships with a pinned generation commit,
+          SHA-256 checksums, and a verifier script. The v4 SFT data is
+          byte-verified against the file the paper trained on.
+        </p>
+        <p class="entry-links">
+          <a href="https://github.com/synterr-nlp/synterr/blob/master/data/V4_DATA_PROVENANCE.md" rel="external">v4 provenance</a>
+        </p>
+      </div>
     </article>
   </section>
 
-  <!-- Latest activity ------------------------------------------------- -->
+  <!-- Anatomy: the dependency-tree grounding ---------------------------- -->
+  <section class="anatomy">
+    <figure class="anatomy-fig">
+      <img src="/papers/bea-2026/figures/depparse_errors.svg"
+           alt="A Russian sentence with three rule-grounded error sites annotated on its dependency tree." />
+    </figure>
+    <div class="anatomy-text">
+      <h2>Errors are placed by the parse, not by chance.</h2>
+      <p>
+        Three rule-grounded error sites on one sentence: agreement
+        (<code>amod</code>), a subordinate-clause boundary
+        (<code>acl:relcl</code>), case government (<code>obl</code>).
+        Handlers fire only where the dependency tree licenses the error —
+        and refuse where the "corruption" would be correct Russian,
+        so a non-error never enters the training data.
+      </p>
+    </div>
+  </section>
+
+  <!-- Recent ------------------------------------------------------------ -->
   <section class="activity">
-    <h2>Recent</h2>
+    <h2 class="activity-title">Recent</h2>
     <ul class="timeline">
       <li>
         <time datetime="2026-05-14">2026-05-14</time>
@@ -107,12 +135,12 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         <span><strong>Site online.</strong> Browsable tables, reasoning-chain viewer, graphical overview.</span>
       </li>
       <li>
-        <time datetime="2026-05-01">2026-05-01</time>
-        <span><strong>Synterr v1.0.</strong> Paper release with reproducibility pack (checksums, verify script, pinned commit).</span>
-      </li>
-      <li>
         <time datetime="2026-05-04">2026-05-04</time>
         <span><strong>BEA 2026 acceptance.</strong> "What Aggregate Scores Hide" accepted at the 21st BEA workshop.</span>
+      </li>
+      <li>
+        <time datetime="2026-05-01">2026-05-01</time>
+        <span><strong>Synterr v1.0.</strong> Paper release with reproducibility pack (checksums, verify script, pinned commit).</span>
       </li>
       <li>
         <time datetime="2026-03-22">2026-03-22</time>
@@ -125,175 +153,200 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 <style>
   /* ── Hero ─────────────────────────────────────────────── */
   .hero {
-    display: grid;
-    grid-template-columns: 1.05fr 1fr;
-    gap: 3rem;
-    align-items: center;
-    margin: 1.5rem 0 4rem;
+    max-width: 46rem;
+    margin: 2.5rem 0 4.5rem;
   }
   .hero h1 {
-    font-size: 2.4rem;
-    line-height: 1.1;
-    margin: 0 0 0.5rem;
-    letter-spacing: -0.015em;
-  }
-  .hero .subtitle {
-    font-family: var(--font-sans);
-    font-size: 0.95rem;
-    color: var(--muted);
-    margin: 0 0 1.25rem;
-    letter-spacing: 0.01em;
+    font-size: clamp(2.1rem, 5.2vw, 3.4rem);
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    margin: 0 0 1.1rem;
   }
   .hero .lede {
-    font-size: 1.1rem;
-    line-height: 1.55;
+    font-size: 1.08rem;
+    line-height: 1.62;
     color: var(--ink-soft);
-    margin: 0 0 1.75rem;
+    max-width: 40rem;
+    margin: 0 0 2.8rem;
   }
+
+  /* The specimen: a real corruption, marked like a proofreader would */
+  .specimen-fig {
+    margin: 0 0 2.6rem;
+  }
+  .specimen {
+    font-size: clamp(1.5rem, 4vw, 2.3rem);
+    line-height: 1.5;
+    font-weight: 500;
+    margin: 0 0 1.4rem; /* room for the caret below the baseline */
+    padding-top: 0.9em; /* room for the interline insertion */
+  }
+  .specimen-caption {
+    font-size: 0.9rem;
+    color: var(--muted);
+    max-width: 38rem;
+    line-height: 1.55;
+  }
+
+  /* load choreography: strike draws, then the correction rises */
+  .specimen del::after {
+    animation: strike 0.32s var(--ease-out) 0.45s backwards;
+  }
+  .specimen .edit ins,
+  .specimen .edit::after {
+    animation: rise 0.24s var(--ease-out) 0.85s backwards;
+  }
+  @keyframes strike {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+  }
+  @keyframes rise {
+    from { opacity: 0; translate: 0 0.25em; }
+    to   { opacity: 1; translate: 0 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .specimen del::after,
+    .specimen .edit ins,
+    .specimen .edit::after { animation: none; }
+  }
+
   .hero-cta {
     display: flex;
-    gap: 0.75rem;
+    align-items: center;
+    gap: 1.5rem;
     flex-wrap: wrap;
   }
-  .btn-primary, .btn-secondary {
-    display: inline-block;
-    padding: 0.55rem 1rem;
-    font-family: var(--font-sans);
-    font-size: 0.92rem;
-    border-radius: 4px;
-    text-decoration: none;
-    border-bottom: none;
-    line-height: 1.3;
-  }
   .btn-primary {
-    background: var(--accent);
-    color: white;
+    display: inline-block;
+    padding: 0.6rem 1.15rem;
+    background: var(--red);
+    color: var(--on-red);
+    font-family: var(--font-mono);
+    font-size: 0.88rem;
+    text-decoration: none;
+    border-radius: 2px;
   }
   .btn-primary:hover {
     background: var(--ink);
-    color: white;
+    color: var(--bg);
   }
-  .btn-secondary {
-    background: transparent;
-    color: var(--ink);
-    border: 1px solid var(--rule);
-  }
-  .btn-secondary:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-  .hero-fig {
-    margin: 0;
-  }
-  .hero-fig img {
-    width: 100%;
-    height: auto;
-    background: white;
-    padding: 1rem;
-    border: 1px solid var(--rule);
-    border-radius: 4px;
-  }
-  .hero-fig figcaption {
-    margin-top: 0.6rem;
-    font-family: var(--font-sans);
-    font-size: 0.82rem;
-    color: var(--muted);
-    line-height: 1.5;
-  }
-  .hero-fig code {
+  .cta-link {
     font-family: var(--font-mono);
-    font-size: 0.78rem;
-    background: var(--bg-soft);
-    padding: 0 0.25rem;
+    font-size: 0.88rem;
+  }
+
+  /* ── The red band ─────────────────────────────────────── */
+  .band {
+    background: var(--red);
+    color: var(--on-red);
+    padding: 2.4rem 2.6rem 2.5rem;
+    margin: 0 0 4.5rem;
     border-radius: 2px;
   }
-
-  /* ── Featured ─────────────────────────────────────────── */
-  .featured {
-    margin: 4rem 0;
-    padding: 2rem 2.25rem;
-    background: var(--bg-soft);
-    border-radius: 6px;
-    border-left: 3px solid var(--accent);
-  }
-  .kicker {
-    font-family: var(--font-sans);
+  .band-kicker {
+    font-family: var(--font-mono);
     font-size: 0.78rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--accent);
-    font-weight: 600;
-    margin-bottom: 0.4rem;
+    margin: 0 0 0.8rem;
+    opacity: 0.85;
   }
-  .featured-title {
-    font-family: var(--font-sans);
-    font-size: 1.6rem;
-    margin: 0 0 0.75rem;
-    text-transform: none;
-    letter-spacing: -0.01em;
-    color: var(--ink);
+  .band-title {
+    color: inherit;
+    font-size: clamp(1.6rem, 3.4vw, 2.2rem);
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    margin: 0 0 0.9rem;
   }
-  .featured-blurb {
-    margin: 0;
-    font-size: 1.02rem;
-    line-height: 1.55;
-    max-width: 44rem;
+  .band-blurb {
+    font-size: 1.05rem;
+    line-height: 1.6;
+    max-width: 42rem;
+    margin: 0 0 1.4rem;
   }
-  .featured-links {
-    list-style: none;
-    padding: 0;
-    margin: 1.25rem 0 0;
+  .band-blurb strong {
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .band-links {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem 1.25rem;
-    font-family: var(--font-sans);
-    font-size: 0.92rem;
+    gap: 0.4rem 1.6rem;
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
   }
-  .featured-links li::before {
-    content: "→";
-    color: var(--muted);
-    margin-right: 0.4rem;
+  .band a {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+    text-decoration-color: color-mix(in oklab, currentColor 55%, transparent);
   }
+  .band a:hover { text-decoration-color: currentColor; }
 
-  /* ── Three column "what we do" ────────────────────────── */
-  .threecol {
+  /* ── The ledger ───────────────────────────────────────── */
+  .ledger {
+    margin: 0 0 5rem;
+  }
+  .entry {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
-    margin: 4rem 0;
-  }
-  .threecol h3 {
-    font-family: var(--font-sans);
-    font-size: 1rem;
-    margin: 0 0 0.75rem;
-    text-transform: none;
-    letter-spacing: 0;
-    color: var(--ink);
-  }
-  .threecol p {
-    margin: 0 0 0.6rem;
-    font-size: 0.95rem;
-    line-height: 1.55;
-    color: var(--ink-soft);
-  }
-  .threecol p.link {
-    font-family: var(--font-sans);
-    font-size: 0.88rem;
-    margin-top: 0.5rem;
-  }
-
-  /* ── Activity timeline ────────────────────────────────── */
-  .activity {
-    margin: 4rem 0 0;
-    padding-top: 2rem;
+    grid-template-columns: 5.5rem 1fr;
+    gap: 1.5rem;
+    padding: 1.8rem 0;
     border-top: 1px solid var(--rule);
   }
-  .activity h2 {
-    font-family: var(--font-sans);
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--muted);
+  .entry:last-child {
+    border-bottom: 1px solid var(--rule);
+  }
+  .entry-ref .para-ref {
+    font-size: 1.05rem;
+  }
+  .entry-body h3 {
+    font-size: 1.25rem;
+    margin: -0.2rem 0 0.55rem;
+  }
+  .entry-body p {
+    margin: 0 0 0.5rem;
+    font-size: 0.98rem;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    max-width: 42rem;
+  }
+  .entry-links {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+  }
+
+  /* ── Anatomy ──────────────────────────────────────────── */
+  .anatomy {
+    display: grid;
+    grid-template-columns: 1.25fr 1fr;
+    gap: 3rem;
+    align-items: center;
+    margin: 0 0 5rem;
+  }
+  .anatomy-fig img {
+    width: 100%;
+    height: auto;
+    background: #fff;
+    padding: 1rem;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+  }
+  .anatomy-text h2 {
+    font-size: 1.5rem;
+    margin: 0 0 0.8rem;
+  }
+  .anatomy-text p {
+    font-size: 0.98rem;
+    line-height: 1.62;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+
+  /* ── Activity ─────────────────────────────────────────── */
+  .activity-title {
+    font-size: 1.05rem;
     margin: 0 0 1rem;
   }
   .timeline {
@@ -303,28 +356,27 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   }
   .timeline li {
     display: grid;
-    grid-template-columns: 7rem 1fr;
+    grid-template-columns: 7.5rem 1fr;
     gap: 1.25rem;
-    padding: 0.65rem 0;
-    border-bottom: 1px solid var(--rule);
+    padding: 0.7rem 0;
+    border-top: 1px solid var(--rule);
     font-size: 0.95rem;
   }
-  .timeline li:last-child { border-bottom: none; }
   .timeline time {
     font-family: var(--font-mono);
-    font-size: 0.85rem;
-    color: var(--muted);
+    font-size: 0.8rem;
+    color: var(--red);
+    padding-top: 0.15rem;
   }
   .timeline span { color: var(--ink-soft); }
-  .timeline strong { color: var(--ink); font-weight: 500; }
+  .timeline strong { color: var(--ink); font-weight: 650; }
 
+  /* ── Responsive ───────────────────────────────────────── */
   @media (max-width: 800px) {
-    .hero {
-      grid-template-columns: 1fr;
-      gap: 2rem;
-    }
-    .hero h1 { font-size: 1.9rem; }
-    .threecol { grid-template-columns: 1fr; gap: 1.5rem; }
-    .timeline li { grid-template-columns: 5rem 1fr; gap: 0.75rem; }
+    .hero { margin-top: 1.2rem; }
+    .band { padding: 1.8rem 1.4rem 1.9rem; }
+    .entry { grid-template-columns: 3.2rem 1fr; gap: 1rem; }
+    .anatomy { grid-template-columns: 1fr; gap: 1.6rem; }
+    .timeline li { grid-template-columns: 6rem 1fr; gap: 0.75rem; font-size: 0.9rem; }
   }
 </style>
